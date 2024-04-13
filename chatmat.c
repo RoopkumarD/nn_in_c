@@ -7,6 +7,22 @@ typedef struct {
 	double **data;
 } Matrix;
 
+void matrix_print(Matrix *mat) {
+	if (mat == NULL) {
+		puts("Address to matrix is NULL");
+		return;
+	}
+
+	for (int i = 0; i < mat->rows; i++) {
+		for (int j = 0; j < mat->cols; j++) {
+			printf("%f\t", mat->data[i][j]);
+		}
+		printf("\n");
+	}
+
+	return;
+}
+
 Matrix *matrix_create(int rows, int cols) {
 	Matrix *mat = (Matrix *)malloc(sizeof(Matrix));
 	if (mat == NULL) {

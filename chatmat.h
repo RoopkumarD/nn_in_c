@@ -4,6 +4,8 @@ typedef struct {
 	double **data;
 } Matrix;
 
+void matrix_print(Matrix *mat);
+
 Matrix *matrix_create(int rows, int cols);
 
 void matrix_free(Matrix *mat);
