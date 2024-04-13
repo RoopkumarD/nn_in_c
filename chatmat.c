@@ -7,6 +7,62 @@ typedef struct {
 	double **data;
 } Matrix;
 
+void matrix_zero_init(Matrix *mat) {
+	if (mat == NULL) {
+		puts("Address to matrix is NULL");
+		return;
+	}
+
+	for (int i = 0; i < mat->rows; i++) {
+		for (int j = 0; j < mat->cols; j++) {
+			mat->data[i][j] = 0;
+		}
+	}
+	return;
+}
+
+void random_initialisation(Matrix *mat) {
+	if (mat == NULL) {
+		puts("Address to matrix is NULL");
+		return;
+	}
+
+	for (int i = 0; i < mat->rows; i++) {
+		for (int j = 0; j < mat->cols; j++) {
+			mat->data[i][j] = (double)rand() / RAND_MAX;
+		}
+	}
+	return;
+}
+
+void matrix_scalar_add(Matrix *mat, double num) {
+	if (mat == NULL) {
+		puts("Address to matrix is NULL");
+		return;
+	}
+
+	for (int i = 0; i < mat->rows; i++) {
+		for (int j = 0; j < mat->cols; j++) {
+			mat->data[i][j] += num;
+		}
+	}
+	return;
+}
+
+void matrix_scalar_mul(Matrix *mat, double num) {
+	if (mat == NULL) {
+		puts("Address to matrix is NULL");
+		return;
+	}
+
+	for (int i = 0; i < mat->rows; i++) {
+		for (int j = 0; j < mat->cols; j++) {
+			mat->data[i][j] *= num;
+		}
+	}
+	return;
+}
+
 void matrix_print(Matrix *mat) {
 	if (mat == NULL) {
 		puts("Address to matrix is NULL");
