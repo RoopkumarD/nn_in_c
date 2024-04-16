@@ -4,6 +4,7 @@
 typedef struct {
 	int rows;
 	int cols;
+	int transpose;
 	double **data;
 } Matrix;
 
@@ -69,11 +70,20 @@ void matrix_print(Matrix *mat) {
 		return;
 	}
 
-	for (int i = 0; i < mat->rows; i++) {
-		for (int j = 0; j < mat->cols; j++) {
-			printf("%f\t", mat->data[i][j]);
+	if (mat->transpose == 0) {
+		for (int i = 0; i < mat->rows; i++) {
+			for (int j = 0; j < mat->cols; j++) {
+				printf("%f\t", mat->data[i][j]);
+			}
+			printf("\n");
 		}
-		printf("\n");
+	} else if (mat->transpose == 1) {
+		for (int i = 0; i < mat->cols; i++) {
+			for (int j = 0; j < mat->rows; j++) {
+				printf("%f\t", mat->data[j][i]);
+			}
+			printf("\n");
+		}
 	}
 
 	return;
@@ -88,6 +98,7 @@ Matrix *matrix_create(int rows, int cols) {
 
 	mat->rows = rows;
 	mat->cols = cols;
+	mat->transpose = 0;
 	mat->data = (double **)malloc(rows * sizeof(double *));
 	if (mat->data == NULL) {
 		puts("Memory allocation failed for mat->data");

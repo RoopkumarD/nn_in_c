@@ -1,6 +1,7 @@
 typedef struct {
 	int rows;
 	int cols;
+	int transpose;
 	double **data;
 } Matrix;
 
