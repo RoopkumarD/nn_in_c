@@ -110,6 +110,7 @@ int main(void) {
 	// thus this way no need to extra more memory
 	//
 	// done with adding this property -> just add this thing in matrix_mul function
+	// check this article -> https://numpy.org/doc/stable/dev/internals.html
 
 	// Now training the model
 	
