@@ -19,26 +19,25 @@ Matrix *weights[] = {NULL, NULL};
 Matrix *bias[] = {NULL, NULL};
 
 int main(void) {
+	int retval = 0;
+	Matrix *X_mat = NULL;
+	Matrix *Y_mat = NULL;
+	int weight_pointer_arr_size = sizeof(weights) / sizeof(weights[0]);
+	int bias_pointer_arr_size = sizeof(bias) / sizeof(bias[0]);
+
 	// first initialising random weights and bias
-	
 	// weights initialisation
 	for (int i = 0; i < num_layers-1; i++) {
 		// first create a matrix for weight
 		Matrix *w = matrix_create(layers[i+1], layers[i]);
 		if (w == NULL) {
 			puts("Failed to create weight matrix");
-			// freeing previously created matrix
-			for (int j = 0; j < i; j++) {
-				matrix_free(weights[j]);
-			}
-			return 1;
+			retval = 1;
+			goto cleanup;
 		}
 		random_initialisation(w);
 		weights[i] = w;
 	}
-
-	// Weight pointer array size
-	int weight_pointer_arr_size = sizeof(weights) / sizeof(weights[0]);
 
 	// bias initialisation
 	for (int i = 0; i < num_layers - 1; i++) {
@@ -46,38 +45,21 @@ int main(void) {
 		Matrix *b = matrix_create(layers[i+1], 1);
 		if (b == NULL) {
 			puts("Failed to create bias matrix");
-			// freeing previously created matrix
-			for (int j = 0; j < i; j++) {
-				matrix_free(bias[j]);
-			}
-			// also freeing previously created weights
-			for (int i = 0; i < weight_pointer_arr_size; i++) {
-				matrix_free(weights[i]);
-			}
-			return 1;
+			retval = 1;
+			goto cleanup;
 		}
 		matrix_zero_init(b);
 		bias[i] = b;
 	}
 
-	// Bias pointer array size
-	int bias_pointer_arr_size = sizeof(bias) / sizeof(bias[0]);
-
-
 	// converting X and y into matrix form
 	int X_rows = sizeof(X) / sizeof(X[0]);
 	int X_cols = sizeof(X[0]) / sizeof(X[0][0]);
-	Matrix *X_mat = matrix_create(X_rows, X_cols);
+	X_mat = matrix_create(X_rows, X_cols);
 	if (X_mat == NULL) {
 		puts("Failed to create matrix for X");
-		// freeing above created weights and bias array
-		for (int i = 0; i < weight_pointer_arr_size; i++) {
-			matrix_free(weights[i]);
-		}
-		for (int i = 0; i < bias_pointer_arr_size; i++) {
-			matrix_free(bias[i]);
-		}
-		return 1;
+		retval = 1;
+		goto cleanup;
 	}
 	for (int i = 0; i < X_rows; i++) {
 		for (int j = 0; j < X_cols; j++) {
@@ -86,19 +68,11 @@ int main(void) {
 	}
 	// since y is 1d arr
 	int y_size = sizeof(Y) / sizeof(Y[0]);
-	Matrix *Y_mat = matrix_create(1, y_size);
+	Y_mat = matrix_create(1, y_size);
 	if (Y_mat == NULL) {
 		puts("Failed to create matrix for Y");
-		// freeing previously created X_mat
-		matrix_free(X_mat);
-		// freeing above created weights and bias array
-		for (int i = 0; i < weight_pointer_arr_size; i++) {
-			matrix_free(weights[i]);
-		}
-		for (int i = 0; i < bias_pointer_arr_size; i++) {
-			matrix_free(bias[i]);
-		}
-		return 1;
+		retval = 1;
+		goto cleanup;
 	}
 	for (int i = 0; i < y_size; i++) {
 		Y_mat->data[0][i] = Y[i];
@@ -116,6 +90,10 @@ int main(void) {
 	
 	// Then feed forward to check the result
 
+	// above goto will jump to this line for execution
+	// if goto is not invoked, still below will process as normally
+	// basically goto just jumps at where to continue executing
+	cleanup:
 	// freeing all the memory asked
 	matrix_free(X_mat);
 	matrix_free(Y_mat);
@@ -125,5 +103,6 @@ int main(void) {
 	for (int i = 0; i < bias_pointer_arr_size; i++) {
 		matrix_free(bias[i]);
 	}
-	return 0;
+
+	return retval;
 }
