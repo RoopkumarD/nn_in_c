@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include "chatmat.h"
 
+#define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
+#define NUM_ROWS(array_2d) ARRAY_LEN(array_2d)
+#define NUM_COLS(array_2d) ARRAY_LEN(array_2d[0])
+
 int X[4][2] = {
 	{0,0},
 	{1,0},
@@ -22,8 +26,12 @@ int main(void) {
 	int retval = 0;
 	Matrix *X_mat = NULL;
 	Matrix *Y_mat = NULL;
+	int weight_pointer_arr_size = ARRAY_LEN(weights);
+	int bias_pointer_arr_size = ARRAY_LEN(bias);
+	/*
 	int weight_pointer_arr_size = sizeof(weights) / sizeof(weights[0]);
 	int bias_pointer_arr_size = sizeof(bias) / sizeof(bias[0]);
+	*/
 
 	// first initialising random weights and bias
 	// weights initialisation
@@ -53,8 +61,12 @@ int main(void) {
 	}
 
 	// converting X and y into matrix form
+	int X_rows = NUM_ROWS(X);
+	int X_cols = NUM_COLS(X);
+	/*
 	int X_rows = sizeof(X) / sizeof(X[0]);
 	int X_cols = sizeof(X[0]) / sizeof(X[0][0]);
+	*/
 	X_mat = matrix_create(X_rows, X_cols);
 	if (X_mat == NULL) {
 		puts("Failed to create matrix for X");
@@ -67,7 +79,8 @@ int main(void) {
 		}
 	}
 	// since y is 1d arr
-	int y_size = sizeof(Y) / sizeof(Y[0]);
+	int y_size = ARRAY_LEN(Y);
+	// int y_size = sizeof(Y) / sizeof(Y[0]);
 	Y_mat = matrix_create(1, y_size);
 	if (Y_mat == NULL) {
 		puts("Failed to create matrix for Y");
