@@ -1,12 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "chatmat.h"
 
-typedef struct {
-	int rows;
-	int cols;
-	int transpose;
-	double **data;
-} Matrix;
+Matrix *matrix_transpose(Matrix *mat) {
+	if (mat == NULL) {
+		puts("Address to matrix is NULL");
+		return NULL;
+	}
+
+	Matrix *mat_trans = NULL;
+
+	if (mat->rows == mat->cols) {
+		for (int i = 0; i < mat->rows; i++) {
+			for (int j = i+1; j < mat->cols; j++) {
+				double temp = mat->data[i][j];
+				mat->data[i][j] = mat->data[j][i];
+				mat->data[j][i] = temp;
+			}
+		}
+		mat_trans = mat;
+	} else {
+		int new_rows = mat->cols;
+		int new_cols = mat->rows;
+
+		mat_trans = Matrix_create(new_rows, new_cols);
+		if (mat_trans == NULL) {
+			matrix_free(mat);
+			return NULL;
+		}
+
+		mat_trans->rows = new_rows;
+		mat_trans->cols = new_cols;
+
+		for (int i = 0; i < new_rows; i++) {
+			for (int j = 0; j < new_cols; j++) {
+				mat_trans->data[i][j] = mat->data[j][i];
+			}
+		}
+
+		matrix_free(mat);
+	}
+
+	return mat_trans;
+}
 
 void matrix_zero_init(Matrix *mat) {
 	if (mat == NULL) {
@@ -70,26 +106,17 @@ void matrix_print(Matrix *mat) {
 		return;
 	}
 
-	if (mat->transpose == 0) {
-		for (int i = 0; i < mat->rows; i++) {
-			for (int j = 0; j < mat->cols; j++) {
-				printf("%f\t", mat->data[i][j]);
-			}
-			printf("\n");
+	for (int i = 0; i < mat->rows; i++) {
+		for (int j = 0; j < mat->cols; j++) {
+			printf("%f\t", mat->data[i][j]);
 		}
-	} else if (mat->transpose == 1) {
-		for (int i = 0; i < mat->cols; i++) {
-			for (int j = 0; j < mat->rows; j++) {
-				printf("%f\t", mat->data[j][i]);
-			}
-			printf("\n");
-		}
+		printf("\n");
 	}
 
 	return;
 }
 
-Matrix *matrix_create(int rows, int cols) {
+Matrix *Matrix_create(int rows, int cols) {
 	Matrix *mat = (Matrix *)malloc(sizeof(Matrix));
 	if (mat == NULL) {
 		puts("Memory allocation for matrix failed");
@@ -98,7 +125,6 @@ Matrix *matrix_create(int rows, int cols) {
 
 	mat->rows = rows;
 	mat->cols = cols;
-	mat->transpose = 0;
 	mat->data = (double **)malloc(rows * sizeof(double *));
 	if (mat->data == NULL) {
 		puts("Memory allocation failed for mat->data");

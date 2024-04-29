@@ -37,7 +37,7 @@ int main(void) {
 	// weights initialisation
 	for (int i = 0; i < num_layers-1; i++) {
 		// first create a matrix for weight
-		Matrix *w = matrix_create(layers[i+1], layers[i]);
+		Matrix *w = Matrix_create(layers[i+1], layers[i]);
 		if (w == NULL) {
 			puts("Failed to create weight matrix");
 			retval = 1;
@@ -50,7 +50,7 @@ int main(void) {
 	// bias initialisation
 	for (int i = 0; i < num_layers - 1; i++) {
 		// first create a matrix for weight
-		Matrix *b = matrix_create(layers[i+1], 1);
+		Matrix *b = Matrix_create(layers[i+1], 1);
 		if (b == NULL) {
 			puts("Failed to create bias matrix");
 			retval = 1;
@@ -67,7 +67,7 @@ int main(void) {
 	int X_rows = sizeof(X) / sizeof(X[0]);
 	int X_cols = sizeof(X[0]) / sizeof(X[0][0]);
 	*/
-	X_mat = matrix_create(X_rows, X_cols);
+	X_mat = Matrix_create(X_rows, X_cols);
 	if (X_mat == NULL) {
 		puts("Failed to create matrix for X");
 		retval = 1;
@@ -81,7 +81,7 @@ int main(void) {
 	// since y is 1d arr
 	int y_size = ARRAY_LEN(Y);
 	// int y_size = sizeof(Y) / sizeof(Y[0]);
-	Y_mat = matrix_create(1, y_size);
+	Y_mat = Matrix_create(1, y_size);
 	if (Y_mat == NULL) {
 		puts("Failed to create matrix for Y");
 		retval = 1;
@@ -92,12 +92,18 @@ int main(void) {
 	}
 
 	// now transposing X_mat and Y_mat
-	// rather than creating new array for each, let's add new property to Matrix struct
-	// where transpose = 1 means read the array in opposite wise if 0 then read normally
-	// thus this way no need to extra more memory
-	//
-	// done with adding this property -> just add this thing in matrix_mul function
-	// check this article -> https://numpy.org/doc/stable/dev/internals.html
+	X_mat = matrix_transpose(X_mat);
+	if (X_mat == NULL) {
+		puts("Failed to transpose matrix for X");
+		retval = 1;
+		goto cleanup;
+	}
+	Y_mat = matrix_transpose(Y_mat);
+	if (Y_mat == NULL) {
+		puts("Failed to transpose matrix for Y");
+		retval = 1;
+		goto cleanup;
+	}
 
 	// Now training the model
 	
