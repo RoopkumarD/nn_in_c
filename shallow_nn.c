@@ -140,17 +140,12 @@ int main(void) {
 		for (int j = 0; j < compute_layers; j++) {
 			// z = np.dot(w, z) + b
 			matrix_mul(weights[j], activations[j], zs[j]);
-			puts("adding zs and bias");
-			// Bro below size wont' be same as zs is for all training
-			// but bias is 1 * row. So update matrix_add, such that
-			// it checks for if row are same or cols are same or both are same
 			matrix_add(zs[j], bias[j], zs[j]);
 			// z = sigmoid(z)
 			sigmoid(zs[j], activations[j+1]);
 		}
 		/*
 		Future:
-		First first above error at lime 147
 		Think of transpose without creating new matrix for it
 		Create static array pointer for delta and delta_w
 		```python

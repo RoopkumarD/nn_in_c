@@ -17,20 +17,56 @@ void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 		return;
 	}
 
-	// checking if all matrix size are same or not
-	if ((mat1->cols != mat2->cols) || (mat1->cols != mat3->cols)) {
-		puts("Matrix shape are not equal");
-		return;
-	}
-	else if ((mat1->rows != mat2->rows) || (mat1->rows != mat3->rows)) {
-		puts("Matrix shape are not equal");
-		return;
-	}
-
-	for (int i = 0; i < mat1->rows; i++) {
-		for (int j = 0; j < mat1->cols; j++) {
-			mat3->data[i][j] = mat1->data[i][j] + mat2->data[i][j];
+	if (
+		((mat1->cols == mat2->cols) && (mat1->cols == mat3->cols)) && 
+		((mat1->rows == mat2->rows) && (mat1->rows == mat3->rows))
+	) {
+		for (int i = 0; i < mat1->rows; i++) {
+			for (int j = 0; j < mat1->cols; j++) {
+				mat3->data[i][j] = mat1->data[i][j] + mat2->data[i][j];
+			}
 		}
+	}
+	else if ((mat1->cols == mat2->cols) && (mat1->cols == mat3->cols)) {
+		// now checking which one has row = 1 and other row has same
+		// number as that of mat3
+		if ((mat1->rows == 1) && (mat2->rows == mat3->rows)) {
+			for (int i = 0; i < mat2->rows; i++) {
+				for (int j = 0; j < mat1->cols; j++) {
+					mat3->data[i][j] = mat1->data[0][j] + mat2->data[i][j];
+				}
+			}
+		} else if ((mat2->rows == 1) && (mat1->rows == mat3->rows)) {
+			for (int i = 0; i < mat1->rows; i++) {
+				for (int j = 0; j < mat1->cols; j++) {
+					mat3->data[i][j] = mat1->data[i][j] + mat2->data[0][j];
+				}
+			}
+		} else {
+			puts("Matrix shape are not equal");
+		}
+	}
+	else if ((mat1->rows == mat2->rows) && (mat1->rows == mat3->rows)) {
+		// now checking which one has cols = 1 and other cols has same
+		// number as that of mat3
+		if ((mat1->cols == 1) && (mat2->cols == mat3->cols)) {
+			for (int i = 0; i < mat1->rows; i++) {
+				for (int j = 0; j < mat2->cols; j++) {
+					mat3->data[i][j] = mat1->data[i][0] + mat2->data[i][j];
+				}
+			}
+		} else if ((mat2->cols == 1) && (mat1->cols == mat3->cols)) {
+			for (int i = 0; i < mat1->rows; i++) {
+				for (int j = 0; j < mat1->cols; j++) {
+					mat3->data[i][j] = mat1->data[i][j] + mat2->data[i][0];
+				}
+			}
+		} else {
+			puts("Matrix shape are not equal");
+		}
+	}
+	else {
+		puts("Matrix shape are not equal");
 	}
 
 	return;
