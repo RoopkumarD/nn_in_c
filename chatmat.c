@@ -2,6 +2,66 @@
 #include <stdlib.h>
 #include "chatmat.h"
 
+// mat1 + mat2 = mat3
+void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
+	if (mat1 == NULL) {
+		puts("Address to mat1 is NULL");
+		return;
+	}
+	if (mat2 == NULL) {
+		puts("Address to mat2 is NULL");
+		return;
+	}
+	if (mat3 == NULL) {
+		puts("Address to mat3 is NULL");
+		return;
+	}
+
+	// checking if all matrix size are same or not
+	if ((mat1->cols != mat2->cols) || (mat1->cols != mat3->cols)) {
+		puts("Matrix shape are not equal");
+		return;
+	}
+	else if ((mat1->rows != mat2->rows) || (mat1->rows != mat3->rows)) {
+		puts("Matrix shape are not equal");
+		return;
+	}
+
+	for (int i = 0; i < mat1->rows; i++) {
+		for (int j = 0; j < mat1->cols; j++) {
+			mat3->data[i][j] = mat1->data[i][j] + mat2->data[i][j];
+		}
+	}
+
+	return;
+}
+
+// copying mat1 into mat2
+void matrix_copy(Matrix *mat1, Matrix *mat2) {
+	if (mat1 == NULL) {
+		puts("Address to mat1 is NULL");
+		return;
+	}
+	if (mat2 == NULL) {
+		puts("Address to mat2 is NULL");
+		return;
+	}
+
+	// checking if both matrix size are same or not
+	if ((mat1->cols != mat2->cols) || (mat1->rows != mat2->rows)) {
+		puts("Matrix shape are not equal");
+		return;
+	}
+
+	for (int i = 0; i < mat1->rows; i++) {
+		for (int j = 0; j < mat1->cols; j++) {
+			mat2->data[i][j] = mat1->data[i][j];
+		}
+	}
+
+	return;
+}
+
 Matrix *matrix_transpose(Matrix *mat) {
 	if (mat == NULL) {
 		puts("Address to matrix is NULL");
@@ -163,6 +223,7 @@ void matrix_free(Matrix *mat) {
 	return;
 }
 
+// mat1 * mat2
 void matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
 	if (mat1->cols != mat2->rows) {
 		puts("Invalid dimension for matrix multiplication");
