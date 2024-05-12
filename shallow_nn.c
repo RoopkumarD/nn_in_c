@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "chatmat.h"
+#include "mat.h"
 #include "utils.h"
 
 #define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
@@ -97,7 +97,7 @@ int main(void) {
 	}
 	for (int i = 0; i < X_rows; i++) {
 		for (int j = 0; j < X_cols; j++) {
-			X_mat->data[i][j] = X[i][j];
+			X_mat->data[i * X_cols + j] = X[i][j];
 		}
 	}
 	// since y is 1d arr
@@ -109,22 +109,12 @@ int main(void) {
 		goto cleanup;
 	}
 	for (int i = 0; i < y_size; i++) {
-		Y_mat->data[0][i] = Y[i];
+		Y_mat->data[i] = Y[i];
 	}
 
 	// now transposing X_mat and Y_mat
-	X_mat = matrix_transpose(X_mat);
-	if (X_mat == NULL) {
-		puts("Failed to transpose matrix for X");
-		retval = 1;
-		goto cleanup;
-	}
-	Y_mat = matrix_transpose(Y_mat);
-	if (Y_mat == NULL) {
-		puts("Failed to transpose matrix for Y");
-		retval = 1;
-		goto cleanup;
-	}
+	X_mat->transpose = 1;
+	Y_mat->transpose = 1;
 
 	// first matrix of activations
 	activations[0] = Matrix_create(X_mat->rows, X_mat->cols);
@@ -139,7 +129,13 @@ int main(void) {
 	for (int i = 0; i < epoch; i++) {
 		for (int j = 0; j < compute_layers; j++) {
 			// z = np.dot(w, z) + b
-			matrix_mul(weights[j], activations[j], zs[j]);
+			int able_to_multiply = matrix_mul(weights[j], activations[j], zs[j]);
+			if (able_to_multiply == 1) {
+				puts("mat1:");
+				matrix_print(weights[j]);
+				puts("mat2:");
+				matrix_print(activations[j]);
+			}
 			matrix_add(zs[j], bias[j], zs[j]);
 			// z = sigmoid(z)
 			sigmoid(zs[j], activations[j+1]);

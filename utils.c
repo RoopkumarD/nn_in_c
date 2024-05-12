@@ -1,4 +1,4 @@
-#include "chatmat.h"
+#include "mat.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -20,11 +20,10 @@ void sigmoid(Matrix *mat1, Matrix *mat2) {
 		return;
 	}
 
-	for (int i = 0; i < mat1->rows; i++) {
-		for (int j = 0; j < mat1->cols; j++) {
-			double denominator = exp(-1 * mat1->data[i][j]) + 1;
-			mat2->data[i][j] = 1 / denominator;
-		}
+	int total_elem = mat1->rows * mat1->cols;
+	for (int i = 0; i < total_elem; i++) {
+		double denominator = exp(-1 * mat1->data[i]) + 1;
+		mat2->data[i] = 1 / denominator;
 	}
 
 	return;
@@ -49,11 +48,10 @@ void sigmoid_prime(Matrix *mat1, Matrix *mat2) {
 		return;
 	}
 
-	for (int i = 0; i < mat1->rows; i++) {
-		for (int j = 0; j < mat1->cols; j++) {
-			double s = mat1->data[i][j];
-			mat2->data[i][j] = s * (1-s);
-		}
+	int total_elem = mat1->rows * mat1->cols;
+	for (int i = 0; i < total_elem; i++) {
+		double s = mat1->data[i];
+		mat2->data[i] = s * (1-s);
 	}
 
 	return;

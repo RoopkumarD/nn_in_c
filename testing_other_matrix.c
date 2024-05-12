@@ -1,67 +1,42 @@
 #include <stdlib.h>
-#include <stdio.h>
+#include "mat.h"
 
-typedef struct {
-	int rows;
-	int cols;
-	int transpose;
-	double *data;
-} Matrix;
+double arr1[3][3] = {
+	{1,2,3},
+	{4,5,6},
+	{7,8,9},
+};
 
-void print_matrix(Matrix *mat);
+double arr2[3][1] = {
+	{10},
+	{20},
+	{30},
+};
 
 int main(void) {
-	Matrix *mat = (Matrix *)malloc(sizeof(Matrix));
-	if (mat == NULL) {
-		puts("Memory allocation for matrix failed");
-		return 1;
+	Matrix *mat1 = Matrix_create(3, 3);
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			mat1->data[i * 3 + j] = arr1[i][j];
+		}
 	}
 
-	mat->rows = 3;
-	mat->cols = 4;
-	mat->transpose = 0;
-	mat->data = (double *)malloc((mat->rows * mat->cols) * sizeof(double));
-	if (mat->data == NULL) {
-		puts("Memory allocation for matrix data failed");
-		free(mat);
-		return 1;
+	Matrix *mat2 = Matrix_create(3, 1);
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 1; j++) {
+			mat2->data[i] = arr2[i][j];
+		}
 	}
 
-	int final_pos = mat->rows * mat->cols + 1;
-	for (int i = 1; i < final_pos; i++) {
-		mat->data[i-1] = i;
-	}
+	Matrix *mat3 = Matrix_create(3, 1);
 
-	printf("Printing the matrix without transpose\n");
-	print_matrix(mat);
+	matrix_mul(mat1, mat2, mat3);
 
-	printf("Printing the matrix with transpose\n");
-	mat->transpose = 1;
-	print_matrix(mat);
+	matrix_print(mat3);
 
-	free(mat->data);
-	free(mat);
+	matrix_free(mat1);
+	matrix_free(mat2);
+	matrix_free(mat3);
 
 	return 0;
-}
-
-void print_matrix(Matrix *mat) {
-	int rows, cols;
-	int m = mat->transpose;
-	if (m == 0) {
-		rows = mat->rows;
-		cols = mat->cols;
-	} else if (m == 1) {
-		rows = mat->cols;
-		cols = mat->rows;
-	}
-
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			printf("%f\t", mat->data[(1-m) * (i * cols + j) + m * (i + j * rows)]);
-		}
-		printf("\n");
-	}
-
-	return;
 }
