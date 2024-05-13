@@ -1,0 +1,3 @@
+- Search "Neural Network in C" in github and check how did they do all those
+- I can do better than this
+- Lastly implement mnist in c and implement all the methods of the textbook
