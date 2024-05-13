@@ -31,5 +31,8 @@ void matrix_zero_init(Matrix *mat);
 void matrix_copy(Matrix *mat1, Matrix *mat2);
 
 void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3);
+void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3);
+
+void matrix_transpose(Matrix *mat);
 
 #endif // !MAT_H

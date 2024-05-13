@@ -256,3 +256,46 @@ void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 
 	return;
 }
+
+// mat1 * mat2 = mat3
+void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
+	if (mat1 == NULL) {
+		puts("Address to mat1 is NULL");
+		return;
+	} else if (mat2 == NULL) {
+		puts("Address to mat2 is NULL");
+		return;
+	} else if (mat3 == NULL) {
+		puts("Address to mat3 is NULL");
+		return;
+	}
+
+	if (
+		((mat1->cols == mat2->cols) && (mat1->cols == mat3->cols)) && 
+		((mat1->rows == mat2->rows) && (mat1->rows == mat3->rows))
+	) {
+		int total_elem = mat1->rows * mat1->cols;
+		for (int i = 0; i < total_elem; i++) {
+			mat3->data[i] = mat1->data[i] * mat2->data[i];
+		}
+	} else {
+		puts("Matrix shape are not equal");
+	}
+
+	return;
+}
+
+void matrix_transpose(Matrix *mat) {
+	if (mat == NULL) {
+		puts("Mat address is NULL");
+		return;
+	}
+
+	if (mat->transpose == 0) {
+		mat->transpose = 1;
+	} else {
+		mat->transpose = 0;
+	}
+
+	return;
+}
