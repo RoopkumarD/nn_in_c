@@ -38,8 +38,8 @@ int main(void) {
 	srand(time(NULL));
 
 	int retval = 0;
+
 	Matrix *X_mat = NULL;
-	Matrix *train_x_separate[training_length];
 	Matrix *Y_mat = NULL;
 	// because can't do dynamical sized array at file level
 	Matrix *weights[num_layers-1];
@@ -126,18 +126,6 @@ int main(void) {
 	// converting X and y into matrix form
 	int X_rows = NUM_ROWS(X);
 	int X_cols = NUM_COLS(X);
-	for (int i = 0; i < training_length; i++) {
-		train_x_separate[i] = Matrix_create(layers[0], 1);
-		if (train_x_separate[i] == NULL) {
-			puts("Failed to create matrix for train_x_separate");
-			retval = 1;
-			goto cleanup;
-		}
-		for (int j = 0; j < layers[0]; j++) {
-			train_x_separate[i]->data[j] = X[i][j];
-		}
-	}
-
 	X_mat = Matrix_create(X_rows, X_cols);
 	if (X_mat == NULL) {
 		puts("Failed to create matrix for X");
@@ -298,13 +286,7 @@ int main(void) {
 	}
 	
 	// Then feed forward to check the result
-	// separting each train for checking
-	for (int m = 0; m < training_length; m++) {
-		puts("For Input: ");
-		matrix_print(train_x_separate[m]);
-		feed_forward(train_x_separate[m], 1, weights, bias, num_layers);
-	}
-	// feed_forward(X_mat, weights, bias, num_layers);
+	feed_forward(X_mat, training_length, weights, bias, num_layers);
 
 	// above goto will jump to this line for execution
 	// if goto is not invoked, still below will process as normally
@@ -313,19 +295,11 @@ int main(void) {
 	// freeing all the memory asked
 	matrix_free(X_mat);
 	matrix_free(Y_mat);
-	zs->rows = high_value_of_nodes;
 	matrix_free(zs);
-	delta->rows = high_value_of_nodes;
 	matrix_free(delta);
-	delta_mul->rows = high_value_of_nodes;
 	matrix_free(delta_mul);
-	delta_weights->rows = high_value_of_nodes;
-	delta_weights->cols = high_value_of_nodes;
 	matrix_free(delta_weights);
 	// matrix_free(activations[0]);
-	for (int i = 0; i < training_length; i++) {
-		matrix_free(train_x_separate[i]);
-	}
 	for (int i = 0; i < compute_layers; i++) {
 		matrix_free(weights[i]);
 		matrix_free(bias[i]);
@@ -400,7 +374,7 @@ void feed_forward(
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
-			activations->data[(1-m)*(i * cols + j) + m * (i + j * rows)] = 
+			activations->data[i * cols + j] = 
 				train_x->data[(1-m)*(i * cols + j) + m * (i + j * rows)];
 		}
 	}
@@ -427,8 +401,6 @@ void feed_forward(
 	matrix_print(activations);
 
 	cleanup:
-	activations->rows = high_value_of_nodes;
-	zs->rows = high_value_of_nodes;
 	matrix_free(activations);
 	matrix_free(zs);
 
