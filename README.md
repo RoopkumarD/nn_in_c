@@ -1,5 +1,4 @@
 # Neural Networks in C
-=====================
 
 This repository documents my journey of learning C by implementing neural networks from
 scratch. I'll be sharing my progress, ideas, and experiments in overoptimizing neural
