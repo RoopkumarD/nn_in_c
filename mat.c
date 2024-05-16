@@ -40,18 +40,23 @@ void matrix_print(Matrix *mat) {
 	}
 
 	int rows, cols;
+	int mi, nj;
 	int m = mat->transpose;
 	if (m == 0) {
 		rows = mat->rows;
 		cols = mat->cols;
+		mi = cols;
+		nj = 1;
 	} else if (m == 1) {
 		rows = mat->cols;
 		cols = mat->rows;
+		mi = 1;
+		nj = rows;
 	}
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
-			printf("%f\t", mat->data[(1-m)*(i * cols + j) + m * (i + j * rows)]);
+			printf("%f\t", mat->data[i * mi + j * nj]);
 		}
 		printf("\n");
 	}
@@ -68,24 +73,34 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
 
 	// for mat1
 	int rows1, cols1;
+	int mi1, nj1;
 	int m1 = mat1->transpose;
 	if (m1 == 0) {
 		rows1 = mat1->rows;
 		cols1 = mat1->cols;
+		mi1 = cols1;
+		nj1 = 1;
 	} else if (m1 == 1) {
 		rows1 = mat1->cols;
 		cols1 = mat1->rows;
+		mi1 = 1;
+		nj1 = rows1;
 	}
 
 	// for mat2
 	int rows2, cols2;
+	int mi2, nj2;
 	int m2 = mat2->transpose;
 	if (m2 == 0) {
 		rows2 = mat2->rows;
 		cols2 = mat2->cols;
+		mi2 = cols2;
+		nj2 = 1;
 	} else if (m2 == 1) {
 		rows2 = mat2->cols;
 		cols2 = mat2->rows;
+		mi2 = 1;
+		nj2 = rows2;
 	}
 
 	if (cols1 != rows2) {
@@ -101,8 +116,8 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
 			res->data[i * cols2 + j] = 0;
 			for (int k = 0; k < cols1; k++) {
 				res->data[i * cols2 + j] += 
-					mat1->data[(1-m1) * (i * cols1 + k) + m1 * (i + k * rows1)] * 
-					mat2->data[(1-m2) * (k * cols2 + j) + m2 * (k + j * rows2)];
+					mat1->data[i * mi1 + k * nj1] * 
+					mat2->data[k * mi2 + j * nj2];
 				//res->data[i][j] += mat1->data[i][k] * mat2->data[k][j];
 			}
 		}
@@ -291,11 +306,7 @@ void matrix_transpose(Matrix *mat) {
 		return;
 	}
 
-	if (mat->transpose == 0) {
-		mat->transpose = 1;
-	} else {
-		mat->transpose = 0;
-	}
+	mat->transpose = (mat->transpose == 0) ? 1 : 0;
 
 	return;
 }

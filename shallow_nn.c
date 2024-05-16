@@ -150,8 +150,8 @@ int main(void) {
 	}
 
 	// now transposing X_mat and Y_mat
-	X_mat->transpose = 1;
-	Y_mat->transpose = 1;
+	matrix_transpose(X_mat);
+	matrix_transpose(Y_mat);
 
 	// first matrix of activations
 	activations[0] = X_mat;
