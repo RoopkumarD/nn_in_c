@@ -179,7 +179,7 @@ void random_initialisation(Matrix *mat) {
 
 	int total_elem = mat->rows * mat->cols;
 	for (int i = 0; i < total_elem; i++) {
-		mat->data[i] = (double)rand() / RAND_MAX;
+		mat->data[i] = ((double)rand() / (RAND_MAX+1.0)) - 0.5;
 	}
 
 	return;
