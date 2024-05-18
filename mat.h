@@ -35,4 +35,6 @@ void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3);
 
 void matrix_transpose(Matrix *mat);
 
+int matrix_dump_csv(Matrix *mat, char *filename);
+
 #endif // !MAT_H

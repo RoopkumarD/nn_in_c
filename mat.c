@@ -1,3 +1,4 @@
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "mat.h"
@@ -309,4 +310,53 @@ void matrix_transpose(Matrix *mat) {
 	mat->transpose = (mat->transpose == 0) ? 1 : 0;
 
 	return;
+}
+
+int matrix_dump_csv(Matrix *mat, char *filename) {
+	if (mat == NULL) {
+		puts("Mat address is NULL");
+		return 1;
+	}
+
+	FILE *fp = fopen(filename, "w");
+	if (fp == NULL) {
+		fprintf(stderr, "Can't open %s\n", filename);
+		return 2;
+	}
+
+	int rows, cols;
+	int mi, nj;
+	int m = mat->transpose;
+	if (m == 0) {
+		rows = mat->rows;
+		cols = mat->cols;
+		mi = cols;
+		nj = 1;
+	} else if (m == 1) {
+		rows = mat->cols;
+		cols = mat->rows;
+		mi = 1;
+		nj = rows;
+	}
+
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			if (j < cols - 1) {
+				fprintf(fp, "%.*f,", DBL_DIG, mat->data[i * mi + j * nj]);
+			} else {
+				fprintf(fp, "%.*f", DBL_DIG, mat->data[i * mi + j * nj]);
+			}
+		}
+		fprintf(fp, "\n");
+	}
+
+	if (ferror(fp)) {
+		fprintf(stderr, "Err writing file: %s", filename);
+		fclose(fp);
+		return 3;
+	}
+
+	fclose(fp);
+
+	return 0;
 }
