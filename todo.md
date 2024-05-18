@@ -8,6 +8,8 @@
 - Lastly implement mnist in c and implement all the methods of the textbook
 
 - Search "Neural Network in C" in github and check how did they do all those
+  - https://github.com/arpitingle/mnist-web
   - https://github.com/100/Cranium
   - https://github.com/HIPS/Probabilistic-Backpropagation
     See autograd and automatic differentiation
+  - https://github.com/save-buffer/gigagrad
