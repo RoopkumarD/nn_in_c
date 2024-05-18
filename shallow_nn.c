@@ -25,14 +25,14 @@ int X[4][2] = {
 	{1,1},
 };
 
-int Y[4] = {0, 1, 0, 1};
+int Y[4] = {0, 1, 1, 0};
 
 int layers[] = {2, 2, 1};
 int num_layers = sizeof(layers) / sizeof(int);
 int training_length = ARRAY_LEN(X);
 
 int epoch = 1000;
-float learn_rate = 5;
+float learn_rate = 10;
 
 int main(void) {
 	srand(time(NULL));
@@ -151,7 +151,6 @@ int main(void) {
 
 	// now transposing X_mat and Y_mat
 	matrix_transpose(X_mat);
-	matrix_transpose(Y_mat);
 
 	// first matrix of activations
 	activations[0] = X_mat;
@@ -170,7 +169,13 @@ int main(void) {
 				retval = 1;
 				goto cleanup;
 			}
-			matrix_add(zs, bias[j], zs);
+			int failure = matrix_col_add(bias[j], zs, zs, 1, 1);
+			if (failure) {
+				puts("Failed adding at line 173");
+				retval = 1;
+				goto cleanup;
+			}
+			// matrix_add(zs, bias[j], zs);
 			// z = sigmoid(z)
 			sigmoid(zs, activations[j+1]);
 		}
@@ -184,26 +189,29 @@ int main(void) {
 		printf("Epoch %d -> Cost %f\n", i, cost_value);
 
 		// delta = (activations[-1] - training_y) * sigmoid_prime(zs[-1])
-		matrix_scalar_mul(Y_mat, -1);
 		delta->rows = activations[num_layers-1]->rows;
-		matrix_add(activations[num_layers-1], Y_mat, delta);
-		matrix_scalar_mul(Y_mat, -1);
+		int failure = matrix_add(activations[num_layers-1], Y_mat, delta, 1, -1);
+		if (failure) {
+			puts("Failed adding at line 194");
+			retval = 1;
+			goto cleanup;
+		}
 		zs->rows = activations[num_layers-1]->rows;
 		sigmoid_prime(activations[num_layers-1], zs);
 		matrix_multiply(delta, zs, delta);
 
 		double weighted_learn_rate = -1 * learn_rate/training_length;
-		double restore_value = -1 * training_length/learn_rate;
+		// double restore_value = -1 * training_length/learn_rate;
 
 		// updating bias
 		// delta_b[-1] = np.sum(delta, axis=1).reshape((-1, 1))
-		matrix_scalar_mul(delta, weighted_learn_rate);
+		// matrix_scalar_mul(delta, weighted_learn_rate);
 		// b - ((self.learn_rate / len(training_x)) * db)
 		int total_elem = delta->cols * delta->rows;
 		for (int k = 0; k < total_elem; k++) {
-			bias[compute_layers-1]->data[k/delta->cols] += delta->data[k];
+			bias[compute_layers-1]->data[k/delta->cols] += (delta->data[k] * weighted_learn_rate);
 		}
-		matrix_scalar_mul(delta, restore_value);
+		// matrix_scalar_mul(delta, restore_value);
 
 		// updating weights
 		// delta_w[-1] = np.dot(delta, activations[-2].transpose())
@@ -223,10 +231,10 @@ int main(void) {
 		}
 		matrix_transpose(activations[num_layers-2]);
 		// w - ((self.learn_rate / len(training_x)) * dw)
-		matrix_scalar_mul(delta_weights, weighted_learn_rate);
+		// matrix_scalar_mul(delta_weights, weighted_learn_rate);
 		total_elem = delta_weights->cols * delta_weights->rows;
 		for (int k = 0; k < total_elem; k++) {
-			weights[compute_layers-1]->data[k] += delta_weights->data[k];
+			weights[compute_layers-1]->data[k] += (delta_weights->data[k] * weighted_learn_rate);
 		}
 
 		for (int m = 2; m < num_layers; m++) {
@@ -257,13 +265,13 @@ int main(void) {
 			
 			// updating bias
 			// delta_b[-i] = np.sum(delta, axis=1, keepdims=True)
-			matrix_scalar_mul(delta_mul, weighted_learn_rate);
+			// matrix_scalar_mul(delta_mul, weighted_learn_rate);
 			// b - ((self.learn_rate / len(training_x)) * db)
 			int total_elem = delta_mul->cols * delta_mul->rows;
 			for (int k = 0; k < total_elem; k++) {
-				bias[compute_layers-m]->data[k/delta_mul->cols] += delta_mul->data[k];
+				bias[compute_layers-m]->data[k/delta_mul->cols] += (delta_mul->data[k] * weighted_learn_rate);
 			}
-			matrix_scalar_mul(delta_mul, restore_value);
+			// matrix_scalar_mul(delta_mul, restore_value);
 
 			// updating weights
 			// delta_w[-i] = np.dot(delta, activations[-i - 1].transpose())
@@ -273,10 +281,10 @@ int main(void) {
 			matrix_mul(delta_mul, activations[num_layers-m-1], delta_weights);
 			matrix_transpose(activations[num_layers-m-1]);
 			// w - ((self.learn_rate / len(training_x)) * dw)
-			matrix_scalar_mul(delta_weights, weighted_learn_rate);
+			// matrix_scalar_mul(delta_weights, weighted_learn_rate);
 			total_elem = delta_weights->cols * delta_weights->rows;
 			for (int k = 0; k < total_elem; k++) {
-				weights[compute_layers-m]->data[k] += delta_weights->data[k];
+				weights[compute_layers-m]->data[k] += (delta_weights->data[k] * weighted_learn_rate);
 			}
 
 			// copying delta_mul to delta
@@ -391,7 +399,12 @@ void feed_forward(
 			matrix_print(activations);
 			goto cleanup;
 		}
-		matrix_add(zs, bias[j], zs);
+		int failure = matrix_col_add(bias[j], zs, zs, 1, 1);
+		if (failure) {
+			puts("Failed adding at line 189");
+			goto cleanup;
+		}
+		// matrix_add(zs, bias[j], zs);
 		// z = sigmoid(z)
 		activations->rows = zs->rows;
 		sigmoid(zs, activations);
