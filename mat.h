@@ -30,7 +30,10 @@ void matrix_zero_init(Matrix *mat);
 // copying mat1 into mat2
 void matrix_copy(Matrix *mat1, Matrix *mat2);
 
-void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3);
+int matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coefficient, float mat2_coefficient);
+int matrix_row_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff, float mat2_coeff);
+int matrix_col_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff, float mat2_coeff);
+
 void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3);
 
 void matrix_transpose(Matrix *mat);

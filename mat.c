@@ -104,6 +104,22 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
 		nj2 = rows2;
 	}
 
+	// for mat3
+	int rows3, cols3;
+	int mi3, nj3;
+	int m3 = res->transpose;
+	if (m3 == 0) {
+		rows3 = res->rows;
+		cols3 = res->cols;
+		mi3 = cols3;
+		nj3 = 1;
+	} else if (m3 == 1) {
+		rows3 = res->cols;
+		cols3 = res->rows;
+		mi3 = 1;
+		nj3 = rows3;
+	}
+
 	if (cols1 != rows2) {
 		printf("Invalid dimension: cols1 != rows2 -> %d != %d\n", cols1, rows2);
 		return 1;
@@ -116,7 +132,7 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
 		for (int j = 0; j < cols2; j++) {
 			res->data[i * cols2 + j] = 0;
 			for (int k = 0; k < cols1; k++) {
-				res->data[i * cols2 + j] += 
+				res->data[i * mi3 + j * nj3] += 
 					mat1->data[i * mi1 + k * nj1] * 
 					mat2->data[k * mi2 + j * nj2];
 				//res->data[i][j] += mat1->data[i][k] * mat2->data[k][j];
@@ -210,6 +226,294 @@ void matrix_copy(Matrix *mat1, Matrix *mat2) {
 	return;
 }
 
+/*
+* c1 * mat1 + c2 * mat2 = mat3
+* mat1 and mat2 are of same shape
+*/
+int matrix_add(
+	Matrix *mat1,
+	Matrix *mat2,
+	Matrix *mat3,
+	float mat1_coefficient,
+	float mat2_coefficient
+) {
+	if (mat1 == NULL) {
+		puts("Address to mat1 is NULL");
+		return 1;
+	} else if (mat2 == NULL) {
+		puts("Address to mat2 is NULL");
+		return 1;
+	} else if (mat3 == NULL) {
+		puts("Address to mat3 is NULL");
+		return 1;
+	}
+
+	// for mat1
+	int rows1, cols1;
+	int mi1, nj1;
+	int m1 = mat1->transpose;
+	if (m1 == 0) {
+		rows1 = mat1->rows;
+		cols1 = mat1->cols;
+		mi1 = cols1;
+		nj1 = 1;
+	} else if (m1 == 1) {
+		rows1 = mat1->cols;
+		cols1 = mat1->rows;
+		mi1 = 1;
+		nj1 = rows1;
+	}
+
+	// for mat2
+	int rows2, cols2;
+	int mi2, nj2;
+	int m2 = mat2->transpose;
+	if (m2 == 0) {
+		rows2 = mat2->rows;
+		cols2 = mat2->cols;
+		mi2 = cols2;
+		nj2 = 1;
+	} else if (m2 == 1) {
+		rows2 = mat2->cols;
+		cols2 = mat2->rows;
+		mi2 = 1;
+		nj2 = rows2;
+	}
+
+	// for mat3
+	int rows3, cols3;
+	int mi3, nj3;
+	int m3 = mat3->transpose;
+	if (m3 == 0) {
+		rows3 = mat3->rows;
+		cols3 = mat3->cols;
+		mi3 = cols3;
+		nj3 = 1;
+	} else if (m3 == 1) {
+		rows3 = mat3->cols;
+		cols3 = mat3->rows;
+		mi3 = 1;
+		nj3 = rows3;
+	}
+
+	if (
+		((cols1 != cols2) || (cols1 != cols3)) || 
+		((rows1 != rows2) || (rows1 != rows3))
+	) {
+		puts("Matrix shape are not equal");
+		return 2;
+	}
+
+	for (int i = 0; i < rows1; i++) {
+		for (int j = 0; j < cols1; j++) {
+			mat3->data[i * mi3 + j * nj3] = 
+					mat1_coefficient * mat1->data[i * mi1 + j * nj1] +
+					mat2_coefficient * mat2->data[i * mi2 + j * nj2];
+		}
+	}
+
+	return 0;
+}
+
+/*
+* Note:
+* c1 * mat1 + c2 * mat2 = mat3
+* mat1 and mat2 cols value are same
+* mat1->rows == 1 and mat2->rows == any
+* mat3->rows == mat2->rows
+*/
+int matrix_row_add(
+	Matrix *mat1,
+	Matrix *mat2,
+	Matrix *mat3,
+	float mat1_coeff,
+	float mat2_coeff
+) {
+	if (mat1 == NULL) {
+		puts("Address to mat1 is NULL");
+		return 1;
+	} else if (mat2 == NULL) {
+		puts("Address to mat2 is NULL");
+		return 1;
+	} else if (mat3 == NULL) {
+		puts("Address to mat3 is NULL");
+		return 1;
+	}
+
+	// for mat1
+	int rows1, cols1;
+	int mi1, nj1;
+	int m1 = mat1->transpose;
+	if (m1 == 0) {
+		rows1 = mat1->rows;
+		cols1 = mat1->cols;
+		mi1 = cols1;
+		nj1 = 1;
+	} else if (m1 == 1) {
+		rows1 = mat1->cols;
+		cols1 = mat1->rows;
+		mi1 = 1;
+		nj1 = rows1;
+	}
+
+	// for mat2
+	int rows2, cols2;
+	int mi2, nj2;
+	int m2 = mat2->transpose;
+	if (m2 == 0) {
+		rows2 = mat2->rows;
+		cols2 = mat2->cols;
+		mi2 = cols2;
+		nj2 = 1;
+	} else if (m2 == 1) {
+		rows2 = mat2->cols;
+		cols2 = mat2->rows;
+		mi2 = 1;
+		nj2 = rows2;
+	}
+
+	// for mat3
+	int rows3, cols3;
+	int mi3, nj3;
+	int m3 = mat3->transpose;
+	if (m3 == 0) {
+		rows3 = mat3->rows;
+		cols3 = mat3->cols;
+		mi3 = cols3;
+		nj3 = 1;
+	} else if (m3 == 1) {
+		rows3 = mat3->cols;
+		cols3 = mat3->rows;
+		mi3 = 1;
+		nj3 = rows3;
+	}
+
+	if ((cols1 != cols2) || (cols1 != cols3)) {
+		puts("Matrix column value are not equal");
+		return 2;
+	} else if (rows1 != 1) {
+		puts("mat1 rows value should be 1");
+		return 2;
+	} else if (rows2 != rows3) {
+		puts("mat2 and mat3 rows should be same");
+		return 2;
+	}
+
+	for (int i = 0; i < rows2; i++) {
+		for (int j = 0; j < cols2; j++) {
+			mat3->data[i * mi3 + j * nj3] = 
+					mat1_coeff * mat1->data[(i * mi1 + j * nj1) % cols1] +
+					mat2_coeff * mat2->data[i * mi2 + j * nj2];
+		}
+	}
+
+	return 0;
+}
+
+/*
+* Note:
+* c1 * mat1 + c2 * mat2 = mat3
+* mat1 and mat2 rows value are same
+* mat1->cols == 1 and mat2->cols == any
+* mat3->cols == mat2->cols
+*/
+int matrix_col_add(
+	Matrix *mat1,
+	Matrix *mat2,
+	Matrix *mat3,
+	float mat1_coeff,
+	float mat2_coeff
+) {
+	if (mat1 == NULL) {
+		puts("Address to mat1 is NULL");
+		return 1;
+	} else if (mat2 == NULL) {
+		puts("Address to mat2 is NULL");
+		return 1;
+	} else if (mat3 == NULL) {
+		puts("Address to mat3 is NULL");
+		return 1;
+	}
+
+	// for mat1
+	int rows1, cols1;
+	int mi1, nj1;
+	int m1 = mat1->transpose;
+	if (m1 == 0) {
+		rows1 = mat1->rows;
+		cols1 = mat1->cols;
+		mi1 = cols1;
+		nj1 = 1;
+	} else if (m1 == 1) {
+		rows1 = mat1->cols;
+		cols1 = mat1->rows;
+		mi1 = 1;
+		nj1 = rows1;
+	}
+
+	// for mat2
+	int rows2, cols2;
+	int mi2, nj2;
+	int m2 = mat2->transpose;
+	if (m2 == 0) {
+		rows2 = mat2->rows;
+		cols2 = mat2->cols;
+		mi2 = cols2;
+		nj2 = 1;
+	} else if (m2 == 1) {
+		rows2 = mat2->cols;
+		cols2 = mat2->rows;
+		mi2 = 1;
+		nj2 = rows2;
+	}
+
+	// for mat3
+	int rows3, cols3;
+	int mi3, nj3;
+	int m3 = mat3->transpose;
+	if (m3 == 0) {
+		rows3 = mat3->rows;
+		cols3 = mat3->cols;
+		mi3 = cols3;
+		nj3 = 1;
+	} else if (m3 == 1) {
+		rows3 = mat3->cols;
+		cols3 = mat3->rows;
+		mi3 = 1;
+		nj3 = rows3;
+	}
+
+	if ((rows1 != rows2) || (rows1 != rows3)) {
+		puts("Matrix rows value are not equal");
+		return 2;
+	} else if (cols1 != 1) {
+		puts("mat1 cols value should be 1");
+		return 2;
+	} else if (cols2 != cols3) {
+		puts("mat2 and mat3 cols should be same");
+		return 2;
+	}
+
+	/*
+	int total_elem = mat2->rows * mat2->cols;
+	for (int i = 0; i < total_elem; i++) {
+		mat3->data[i] = mat1->data[i / cols2] + mat2->data[i];
+	}
+	*/
+
+	for (int i = 0; i < rows2; i++) {
+		for (int j = 0; j < cols2; j++) {
+			mat3->data[i * mi3 + j * nj3] = 
+					mat1_coeff * mat1->data[(i * mi1 + j * nj1) / cols2] +
+					mat2_coeff * mat2->data[i * mi2 + j * nj2];
+		}
+	}
+
+	return 0;
+}
+
+
+/*
 // mat1 + mat2 = mat3
 void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 	if (mat1 == NULL) {
@@ -272,6 +576,7 @@ void matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 
 	return;
 }
+*/
 
 // mat1 * mat2 = mat3
 void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
@@ -286,21 +591,60 @@ void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 		return;
 	}
 
+	// for mat1
+	int rows1, cols1;
+	int m1 = mat1->transpose;
+	if (m1 == 0) {
+		rows1 = mat1->rows;
+		cols1 = mat1->cols;
+	} else if (m1 == 1) {
+		rows1 = mat1->cols;
+		cols1 = mat1->rows;
+	}
+
+	// for mat2
+	int rows2, cols2;
+	int m2 = mat2->transpose;
+	if (m2 == 0) {
+		rows2 = mat2->rows;
+		cols2 = mat2->cols;
+	} else if (m2 == 1) {
+		rows2 = mat2->cols;
+		cols2 = mat2->rows;
+	}
+
+	// for mat3
+	int rows3, cols3;
+	int m3 = mat3->transpose;
+	if (m3 == 0) {
+		rows3 = mat3->rows;
+		cols3 = mat3->cols;
+	} else if (m3 == 1) {
+		rows3 = mat3->cols;
+		cols3 = mat3->rows;
+	}
+
 	if (
-		((mat1->cols == mat2->cols) && (mat1->cols == mat3->cols)) && 
-		((mat1->rows == mat2->rows) && (mat1->rows == mat3->rows))
+		((cols1 != cols2) || (cols1 != cols3)) || 
+		((rows1 != rows2) || (rows1 != rows3))
 	) {
-		int total_elem = mat1->rows * mat1->cols;
-		for (int i = 0; i < total_elem; i++) {
-			mat3->data[i] = mat1->data[i] * mat2->data[i];
-		}
-	} else {
 		puts("Matrix shape are not equal");
+		return;
+	}
+
+	int total_elem = mat1->rows * mat1->cols;
+	for (int i = 0; i < total_elem; i++) {
+		mat3->data[i] = mat1->data[i] * mat2->data[i];
 	}
 
 	return;
 }
 
+// thinking about changing the values of rows and cols
+// should i?
+// no actually if i do the changing of rows and cols
+// in this function then it will be difficult to assign
+// m value with rows and cols and thus creating confusion
 void matrix_transpose(Matrix *mat) {
 	if (mat == NULL) {
 		puts("Mat address is NULL");
