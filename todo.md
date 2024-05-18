@@ -13,3 +13,5 @@
   - https://github.com/HIPS/Probabilistic-Backpropagation
     See autograd and automatic differentiation
   - https://github.com/save-buffer/gigagrad
+  - https://github.com/pjreddie/dl-hw0
+  - Search deep learning with language:c filter to see gems
