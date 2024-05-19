@@ -32,7 +32,7 @@ int num_layers = sizeof(layers) / sizeof(int);
 int training_length = ARRAY_LEN(X);
 
 int epoch = 1000;
-float learn_rate = 10;
+float learn_rate = 5;
 
 int main(void) {
 	srand(time(NULL));

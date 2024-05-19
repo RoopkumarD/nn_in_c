@@ -402,7 +402,10 @@ int matrix_row_add(
 	for (int i = 0; i < rows2; i++) {
 		for (int j = 0; j < cols2; j++) {
 			mat3->data[i * mi3 + j * nj3] = 
-					mat1_coeff * mat1->data[(i * mi1 + j * nj1) % cols1] +
+				// because view of mat3 and mat2 are transposed
+				// if mat1 is transpose we are caring about which element
+				// in currently right now
+					mat1_coeff * mat1->data[(i * cols1 + j) % cols1] +
 					mat2_coeff * mat2->data[i * mi2 + j * nj2];
 		}
 	}
@@ -504,7 +507,7 @@ int matrix_col_add(
 	for (int i = 0; i < rows2; i++) {
 		for (int j = 0; j < cols2; j++) {
 			mat3->data[i * mi3 + j * nj3] = 
-					mat1_coeff * mat1->data[(i * mi1 + j * nj1) / cols2] +
+					mat1_coeff * mat1->data[(i * cols2 + j) / cols2] +
 					mat2_coeff * mat2->data[i * mi2 + j * nj2];
 		}
 	}
