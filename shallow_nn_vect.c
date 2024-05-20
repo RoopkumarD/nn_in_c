@@ -36,7 +36,7 @@ int num_layers = sizeof(layers) / sizeof(int);
 int training_length = ARRAY_LEN(X);
 
 int main(void) {
-	srand(42);
+	srand(time(NULL));
 
 	int retval = 0;
 
@@ -77,11 +77,7 @@ int main(void) {
 			retval = 1;
 			goto cleanup;
 		}
-		int total_elem = weights_bias->rows * weights_bias->cols;
-		for (int j = 0; j < total_elem; j++) {
-			weights_bias->data[j] = 1;
-		}
-		// random_initialisation(weights_bias);
+		random_initialisation(weights_bias);
 		wb[i] = weights_bias;
 
 		Matrix *acti = Matrix_create(layers[i+1] + EXTRA_ONE, training_length);
@@ -93,11 +89,6 @@ int main(void) {
 		activations[i+1] = acti;
 	}
 
-	for (int i = 0; i < compute_layers; i++) {
-		matrix_print(wb[i]);
-		printf("\n---------\n");
-	}
-
 	// zs for temp storage while matrix multiplication
 	int highest_node_num = 0;
 	for (int m = 1; m < num_layers; m++) {
@@ -105,7 +96,7 @@ int main(void) {
 			highest_node_num = layers[m];
 		}
 	}
-	Matrix *zs = Matrix_create(highest_node_num + EXTRA_ONE, training_length);
+	Matrix *zs = Matrix_create(highest_node_num, training_length);
 	if (zs == NULL) {
 		puts("Failed to create zs matrix");
 		retval = 1;
@@ -167,6 +158,22 @@ int main(void) {
 	// first matrix of activations
 	activations[0] = X_mat;
 
+	/*
+	What i did here is converted the whole AX + B operation in feedforward
+	to MX one operation where M = [A B]
+	For example:
+	[w1 w2][x1  + [b1]
+		x2]
+
+	can also be written as
+	[w1 w2 b1][x1
+		   x2]
+
+	Thus with above, in each step i am adding extra 1 to each activations
+	except the last one as it is wasteful. By doing above, in backprop
+	rather than doing two loops to update weights and bias separately
+	we can update them at once. Refer below
+	*/
 	// training
 	for (int i = 0; i < EPOCH; i++) {
 		for (int j = 0; j < compute_layers; j++) {
@@ -204,7 +211,7 @@ int main(void) {
 		// printing the cost at this epoch
 		activations[num_layers-1]->rows -= 1;
 		double cost_value = cost_function(activations[num_layers-1], Y_mat, training_length);
-		// printf("Epoch %d -> Cost %f\n", i, cost_value);
+		printf("Epoch %d -> Cost %f\n", i, cost_value);
 
 		// last layer delta
 		// delta = (activations[-1] - training_y) * sigmoid_prime(zs[-1])
@@ -225,6 +232,15 @@ int main(void) {
 
 		// updating wb
 		// delta_wb[-1] = np.dot(delta, activations[-2].transpose())
+		/*
+		Cause matrix multiplication of delta with activations containing
+		1 at the last column will result in matrix where if columns_num = n
+		then n-1 column with all rows will be of delta_w and last column is for
+		delta_b.
+
+		Take any number of training length and see that all the deltas are added
+		together for each training case.
+		*/
 		matrix_transpose(activations[num_layers-2]);
 		delta_wb->rows = wb[compute_layers-1]->rows;
 		delta_wb->cols = wb[compute_layers-1]->cols;
@@ -297,13 +313,6 @@ int main(void) {
 			matrix_copy(delta_mul, delta);
 		}
 	}
-
-
-	for (int i = 0; i < compute_layers; i++) {
-		matrix_print(wb[i]);
-		printf("\n---------\n");
-	}
-
 	
 	// Then feed forward to check the result
 	feed_forward(X_mat, training_length, wb, num_layers);
