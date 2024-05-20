@@ -18,6 +18,9 @@ void feed_forward(
 #define NUM_ROWS(array_2d) ARRAY_LEN(array_2d)
 #define NUM_COLS(array_2d) ARRAY_LEN(array_2d[0])
 
+# define EPOCH 1000
+# define LEARN_RATE 5
+
 int X[4][2] = {
 	{0,0},
 	{1,0},
@@ -31,11 +34,8 @@ int layers[] = {2, 2, 1};
 int num_layers = sizeof(layers) / sizeof(int);
 int training_length = ARRAY_LEN(X);
 
-int epoch = 1000;
-float learn_rate = 5;
-
 int main(void) {
-	srand(time(NULL));
+	srand(42);
 
 	int retval = 0;
 
@@ -156,7 +156,7 @@ int main(void) {
 	activations[0] = X_mat;
 
 	// Now training the model
-	for (int i = 0; i < epoch; i++) {
+	for (int i = 0; i < EPOCH; i++) {
 		for (int j = 0; j < compute_layers; j++) {
 			// z = np.dot(w, z) + b
 			zs->rows = weights[j]->rows;
@@ -200,7 +200,7 @@ int main(void) {
 		sigmoid_prime(activations[num_layers-1], zs);
 		matrix_multiply(delta, zs, delta);
 
-		double weighted_learn_rate = -1 * learn_rate/training_length;
+		double weighted_learn_rate = -1 * ((double)LEARN_RATE/training_length);
 		// double restore_value = -1 * training_length/learn_rate;
 
 		// updating bias
