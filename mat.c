@@ -643,22 +643,6 @@ void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 	return;
 }
 
-// thinking about changing the values of rows and cols
-// should i?
-// no actually if i do the changing of rows and cols
-// in this function then it will be difficult to assign
-// m value with rows and cols and thus creating confusion
-void matrix_transpose(Matrix *mat) {
-	if (mat == NULL) {
-		puts("Mat address is NULL");
-		return;
-	}
-
-	mat->transpose = (mat->transpose == 0) ? 1 : 0;
-
-	return;
-}
-
 int matrix_dump_csv(Matrix *mat, char *filename) {
 	if (mat == NULL) {
 		puts("Mat address is NULL");

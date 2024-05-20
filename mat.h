@@ -10,6 +10,10 @@ typedef struct {
 	double *data;
 } Matrix;
 
+
+#define matrix_transpose(mat) \
+		(mat->transpose = (mat->transpose == 0) ? 1 : 0)
+
 Matrix *Matrix_create(int rows, int cols);
 
 void matrix_free(Matrix *mat);
@@ -35,8 +39,6 @@ int matrix_row_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff, f
 int matrix_col_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff, float mat2_coeff);
 
 void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3);
-
-void matrix_transpose(Matrix *mat);
 
 int matrix_dump_csv(Matrix *mat, char *filename);
 
