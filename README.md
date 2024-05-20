@@ -23,8 +23,9 @@ To use the code, simply execute `build.sh` to generate the `shallow_nn.out` exec
 If you're interested in seeing how my implementation has evolved, check out the following
 tags:
 
-* **v0.1.0**: Multi-pointer array implementation for matrices
-* **v0.2.0**: Linear array implementation for matrices
+- **v0.1.0**: Multi-pointer array implementation for matrices
+- **v0.2.0**: Linear array implementation for matrices
+- **v0.3.0**: Combining Ax + B to MX one operation
 
 ## Contributing
 
