@@ -383,20 +383,7 @@ void feed_forward(
 
 	// setting activation to train_x
 	// need to worry about transpose
-	int rows, cols;
-	int m = train_x->transpose;
-	int mi, nj;
-	if (m == 0) {
-		rows = train_x->rows;
-		cols = train_x->cols;
-		mi = cols;
-		nj = 1;
-	} else if (m == 1) {
-		rows = train_x->cols;
-		cols = train_x->rows;
-		mi = 1;
-		nj = rows;
-	}
+	SET_MATRIX_DIMENSIONS(train_x, )
 
 	if (activations->cols != cols) {
 		puts("Bro send data in (input row) * (obs cols) format");

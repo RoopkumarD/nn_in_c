@@ -40,20 +40,7 @@ void matrix_print(Matrix *mat) {
 		return;
 	}
 
-	int rows, cols;
-	int mi, nj;
-	int m = mat->transpose;
-	if (m == 0) {
-		rows = mat->rows;
-		cols = mat->cols;
-		mi = cols;
-		nj = 1;
-	} else if (m == 1) {
-		rows = mat->cols;
-		cols = mat->rows;
-		mi = 1;
-		nj = rows;
-	}
+	SET_MATRIX_DIMENSIONS(mat, )
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
@@ -73,52 +60,13 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
 	}
 
 	// for mat1
-	int rows1, cols1;
-	int mi1, nj1;
-	int m1 = mat1->transpose;
-	if (m1 == 0) {
-		rows1 = mat1->rows;
-		cols1 = mat1->cols;
-		mi1 = cols1;
-		nj1 = 1;
-	} else if (m1 == 1) {
-		rows1 = mat1->cols;
-		cols1 = mat1->rows;
-		mi1 = 1;
-		nj1 = rows1;
-	}
+	SET_MATRIX_DIMENSIONS(mat1, 1)
 
 	// for mat2
-	int rows2, cols2;
-	int mi2, nj2;
-	int m2 = mat2->transpose;
-	if (m2 == 0) {
-		rows2 = mat2->rows;
-		cols2 = mat2->cols;
-		mi2 = cols2;
-		nj2 = 1;
-	} else if (m2 == 1) {
-		rows2 = mat2->cols;
-		cols2 = mat2->rows;
-		mi2 = 1;
-		nj2 = rows2;
-	}
+	SET_MATRIX_DIMENSIONS(mat2, 2)
 
 	// for mat3
-	int rows3, cols3;
-	int mi3, nj3;
-	int m3 = res->transpose;
-	if (m3 == 0) {
-		rows3 = res->rows;
-		cols3 = res->cols;
-		mi3 = cols3;
-		nj3 = 1;
-	} else if (m3 == 1) {
-		rows3 = res->cols;
-		cols3 = res->rows;
-		mi3 = 1;
-		nj3 = rows3;
-	}
+	SET_MATRIX_DIMENSIONS(res, 3)
 
 	if (cols1 != rows2) {
 		printf("Invalid dimension: cols1 != rows2 -> %d != %d\n", cols1, rows2);
@@ -249,52 +197,13 @@ int matrix_add(
 	}
 
 	// for mat1
-	int rows1, cols1;
-	int mi1, nj1;
-	int m1 = mat1->transpose;
-	if (m1 == 0) {
-		rows1 = mat1->rows;
-		cols1 = mat1->cols;
-		mi1 = cols1;
-		nj1 = 1;
-	} else if (m1 == 1) {
-		rows1 = mat1->cols;
-		cols1 = mat1->rows;
-		mi1 = 1;
-		nj1 = rows1;
-	}
+	SET_MATRIX_DIMENSIONS(mat1, 1)
 
 	// for mat2
-	int rows2, cols2;
-	int mi2, nj2;
-	int m2 = mat2->transpose;
-	if (m2 == 0) {
-		rows2 = mat2->rows;
-		cols2 = mat2->cols;
-		mi2 = cols2;
-		nj2 = 1;
-	} else if (m2 == 1) {
-		rows2 = mat2->cols;
-		cols2 = mat2->rows;
-		mi2 = 1;
-		nj2 = rows2;
-	}
+	SET_MATRIX_DIMENSIONS(mat2, 2)
 
 	// for mat3
-	int rows3, cols3;
-	int mi3, nj3;
-	int m3 = mat3->transpose;
-	if (m3 == 0) {
-		rows3 = mat3->rows;
-		cols3 = mat3->cols;
-		mi3 = cols3;
-		nj3 = 1;
-	} else if (m3 == 1) {
-		rows3 = mat3->cols;
-		cols3 = mat3->rows;
-		mi3 = 1;
-		nj3 = rows3;
-	}
+	SET_MATRIX_DIMENSIONS(mat3, 3)
 
 	if (
 		((cols1 != cols2) || (cols1 != cols3)) || 
@@ -341,52 +250,13 @@ int matrix_row_add(
 	}
 
 	// for mat1
-	int rows1, cols1;
-	int mi1, nj1;
-	int m1 = mat1->transpose;
-	if (m1 == 0) {
-		rows1 = mat1->rows;
-		cols1 = mat1->cols;
-		mi1 = cols1;
-		nj1 = 1;
-	} else if (m1 == 1) {
-		rows1 = mat1->cols;
-		cols1 = mat1->rows;
-		mi1 = 1;
-		nj1 = rows1;
-	}
+	SET_MATRIX_DIMENSIONS(mat1, 1)
 
 	// for mat2
-	int rows2, cols2;
-	int mi2, nj2;
-	int m2 = mat2->transpose;
-	if (m2 == 0) {
-		rows2 = mat2->rows;
-		cols2 = mat2->cols;
-		mi2 = cols2;
-		nj2 = 1;
-	} else if (m2 == 1) {
-		rows2 = mat2->cols;
-		cols2 = mat2->rows;
-		mi2 = 1;
-		nj2 = rows2;
-	}
+	SET_MATRIX_DIMENSIONS(mat2, 2)
 
 	// for mat3
-	int rows3, cols3;
-	int mi3, nj3;
-	int m3 = mat3->transpose;
-	if (m3 == 0) {
-		rows3 = mat3->rows;
-		cols3 = mat3->cols;
-		mi3 = cols3;
-		nj3 = 1;
-	} else if (m3 == 1) {
-		rows3 = mat3->cols;
-		cols3 = mat3->rows;
-		mi3 = 1;
-		nj3 = rows3;
-	}
+	SET_MATRIX_DIMENSIONS(mat3, 3)
 
 	if ((cols1 != cols2) || (cols1 != cols3)) {
 		puts("Matrix column value are not equal");
@@ -439,52 +309,13 @@ int matrix_col_add(
 	}
 
 	// for mat1
-	int rows1, cols1;
-	int mi1, nj1;
-	int m1 = mat1->transpose;
-	if (m1 == 0) {
-		rows1 = mat1->rows;
-		cols1 = mat1->cols;
-		mi1 = cols1;
-		nj1 = 1;
-	} else if (m1 == 1) {
-		rows1 = mat1->cols;
-		cols1 = mat1->rows;
-		mi1 = 1;
-		nj1 = rows1;
-	}
+	SET_MATRIX_DIMENSIONS(mat1, 1)
 
 	// for mat2
-	int rows2, cols2;
-	int mi2, nj2;
-	int m2 = mat2->transpose;
-	if (m2 == 0) {
-		rows2 = mat2->rows;
-		cols2 = mat2->cols;
-		mi2 = cols2;
-		nj2 = 1;
-	} else if (m2 == 1) {
-		rows2 = mat2->cols;
-		cols2 = mat2->rows;
-		mi2 = 1;
-		nj2 = rows2;
-	}
+	SET_MATRIX_DIMENSIONS(mat2, 2)
 
 	// for mat3
-	int rows3, cols3;
-	int mi3, nj3;
-	int m3 = mat3->transpose;
-	if (m3 == 0) {
-		rows3 = mat3->rows;
-		cols3 = mat3->cols;
-		mi3 = cols3;
-		nj3 = 1;
-	} else if (m3 == 1) {
-		rows3 = mat3->cols;
-		cols3 = mat3->rows;
-		mi3 = 1;
-		nj3 = rows3;
-	}
+	SET_MATRIX_DIMENSIONS(mat3, 3)
 
 	if ((rows1 != rows2) || (rows1 != rows3)) {
 		puts("Matrix rows value are not equal");
@@ -595,37 +426,13 @@ void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 	}
 
 	// for mat1
-	int rows1, cols1;
-	int m1 = mat1->transpose;
-	if (m1 == 0) {
-		rows1 = mat1->rows;
-		cols1 = mat1->cols;
-	} else if (m1 == 1) {
-		rows1 = mat1->cols;
-		cols1 = mat1->rows;
-	}
+	SET_MATRIX_DIMENSIONS(mat1, 1)
 
 	// for mat2
-	int rows2, cols2;
-	int m2 = mat2->transpose;
-	if (m2 == 0) {
-		rows2 = mat2->rows;
-		cols2 = mat2->cols;
-	} else if (m2 == 1) {
-		rows2 = mat2->cols;
-		cols2 = mat2->rows;
-	}
+	SET_MATRIX_DIMENSIONS(mat2, 2)
 
 	// for mat3
-	int rows3, cols3;
-	int m3 = mat3->transpose;
-	if (m3 == 0) {
-		rows3 = mat3->rows;
-		cols3 = mat3->cols;
-	} else if (m3 == 1) {
-		rows3 = mat3->cols;
-		cols3 = mat3->rows;
-	}
+	SET_MATRIX_DIMENSIONS(mat3, 3)
 
 	if (
 		((cols1 != cols2) || (cols1 != cols3)) || 
@@ -655,20 +462,7 @@ int matrix_dump_csv(Matrix *mat, char *filename) {
 		return 2;
 	}
 
-	int rows, cols;
-	int mi, nj;
-	int m = mat->transpose;
-	if (m == 0) {
-		rows = mat->rows;
-		cols = mat->cols;
-		mi = cols;
-		nj = 1;
-	} else if (m == 1) {
-		rows = mat->cols;
-		cols = mat->rows;
-		mi = 1;
-		nj = rows;
-	}
+	SET_MATRIX_DIMENSIONS(mat, )
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {

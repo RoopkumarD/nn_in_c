@@ -12,7 +12,31 @@ typedef struct {
 
 
 #define matrix_transpose(mat) \
-		(mat->transpose = (mat->transpose == 0) ? 1 : 0)
+	(mat->transpose = (mat->transpose == 0) ? 1 : 0);
+
+
+// here to set rows -> send SET_MATRIX_DIMENSIONS(mat, )
+// thus it will concaenate rows + nothing = rows
+// if send SET_MATRIX_DIMENSIONS(mat, "")
+// then it will concaenate rows + "" = rows""
+// if send SET_MATRIX_DIMENSIONS(mat, "1")
+// then it will concaenate rows + "1" = rows"1"
+#define SET_MATRIX_DIMENSIONS(mat, num)		       \
+	int rows##num, cols##num;                      \
+	int mi##num, nj##num;                          \
+	int m##num = mat->transpose;                   \
+	if (m##num == 0) {                             \
+	    rows##num = mat->rows;                     \
+	    cols##num = mat->cols;                     \
+	    mi##num = cols##num;                       \
+	    nj##num = 1;                               \
+	} else if (m##num == 1) {                      \
+	    rows##num = mat->cols;                     \
+	    cols##num = mat->rows;                     \
+	    mi##num = 1;                               \
+	    nj##num = rows##num;                       \
+	}
+
 
 Matrix *Matrix_create(int rows, int cols);
 
