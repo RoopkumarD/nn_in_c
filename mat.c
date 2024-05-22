@@ -1,4 +1,5 @@
 #include <float.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "mat.h"
@@ -467,9 +468,16 @@ int matrix_dump_csv(Matrix *mat, char *filename) {
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			if (j < cols - 1) {
-				fprintf(fp, "%.*f,", DBL_DIG, mat->data[i * mi + j * nj]);
+				if (isnan(mat->data[i * mi + j * nj])) {
+					fprintf(fp, ",");
+				} else {
+					fprintf(fp, "%.*f,", DBL_DIG, mat->data[i * mi + j * nj]);
+				}
 			} else {
-				fprintf(fp, "%.*f", DBL_DIG, mat->data[i * mi + j * nj]);
+				// if NAN don't print anything to file
+				if (isnan(mat->data[i * mi + j * nj]) == 0) {
+					fprintf(fp, "%.*f", DBL_DIG, mat->data[i * mi + j * nj]);
+				}
 			}
 		}
 		fprintf(fp, "\n");
