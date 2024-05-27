@@ -1,7 +1,3 @@
-- Separate all functions like training and stuff in another function
-
-- Create input .csv file and read from it
-
 - Check for error handling in c, check if there any functions like
   python has where throwing error will also include which line error has been thrown
 
