@@ -49,10 +49,10 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
     for (size_t i = 0; i < bytes_read; i++) {
       if (sml_buffer[i] == '\n') {
         sml_buffer[i] = '\0';
-        target_col =
-            (target_col == -1) && (strcmp(&sml_buffer[start], target_name) == 0)
-                ? col
-                : -1;
+        if ((target_col == -1) &&
+            (strcmp(&sml_buffer[start], target_name) == 0)) {
+          target_col = col;
+        }
         sml_buffer[i] = '\n';
 
         file_idx += i;
@@ -62,10 +62,10 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
         break;
       } else if (sml_buffer[i] == ',') {
         sml_buffer[i] = '\0';
-        target_col =
-            (target_col == -1) && (strcmp(&sml_buffer[start], target_name) == 0)
-                ? col
-                : -1;
+        if ((target_col == -1) &&
+            (strcmp(&sml_buffer[start], target_name) == 0)) {
+          target_col = col;
+        }
         sml_buffer[i] = ',';
         start = i + 1;
         col++;
@@ -74,7 +74,17 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
     if (got_new_line == 1) {
       break;
     }
-    file_idx += bytes_read;
+
+    if (sml_buffer[bytes_read - 1] != ',') {
+      file_idx += start;
+      if (fseek(fp, file_idx, SEEK_SET)) {
+        fprintf(stderr, "Can't Seek at %zu from start\n", file_idx);
+        retval = -7;
+        goto cleanup;
+      }
+    } else {
+      file_idx += bytes_read;
+    }
   }
   if (ferror(fp)) {
     fprintf(stderr, "Error reading the file\n");

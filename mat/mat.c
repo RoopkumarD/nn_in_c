@@ -5,7 +5,7 @@
 Matrix *Matrix_create(int rows, int cols) {
   Matrix *mat = (Matrix *)malloc(sizeof(Matrix));
   if (mat == NULL) {
-    puts("Memory allocation for matrix failed");
+    printf("%s: Memory allocation for matrix failed\n", __func__);
     return NULL;
   }
 
@@ -14,7 +14,7 @@ Matrix *Matrix_create(int rows, int cols) {
   mat->transpose = 0;
   mat->data = (double *)malloc((rows * cols) * sizeof(double));
   if (mat->data == NULL) {
-    puts("Memory allocation failed for mat->data");
+    printf("%s: Memory allocation failed for mat->data\n", __func__);
     free(mat);
     return NULL;
   }
@@ -33,10 +33,10 @@ void matrix_free(Matrix *mat) {
   return;
 }
 
-void matrix_print(Matrix *mat) {
+int matrix_print(Matrix *mat) {
   if (mat == NULL) {
-    puts("Address to matrix is NULL");
-    return;
+    printf("%s: Address to matrix is NULL\n", __func__);
+    return 1;
   }
 
   SET_MATRIX_DIMENSIONS(mat, )
@@ -48,13 +48,13 @@ void matrix_print(Matrix *mat) {
     printf("\n");
   }
 
-  return;
+  return 0;
 }
 
 // mat1 * mat2 = res
 int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
   if ((mat1 == NULL) || (mat2 == NULL) || (res == NULL)) {
-    puts("Address to one of the mat given is NULL");
+    printf("%s: Address to one of the mat given is NULL\n", __func__);
     return 1;
   }
 
@@ -68,11 +68,12 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
   SET_MATRIX_DIMENSIONS(res, 3)
 
   if (cols1 != rows2) {
-    printf("Invalid dimension: cols1 != rows2 -> %d != %d\n", cols1, rows2);
+    printf("%s: Invalid dimension: cols1 != rows2 -> %d != %d\n", __func__,
+           cols1, rows2);
     return 1;
   } else if ((res->rows != rows1) || (res->cols != cols2)) {
-    printf("res dimension should be: %d %d but got %d %d\n", rows1, cols2,
-           res->rows, res->cols);
+    printf("%s: res dimension should be: %d %d but got %d %d\n", __func__,
+           rows1, cols2, res->rows, res->cols);
     return 1;
   }
 
@@ -90,10 +91,10 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
   return 0;
 }
 
-void matrix_scalar_mul(Matrix *mat, double num) {
+int matrix_scalar_mul(Matrix *mat, double num) {
   if (mat == NULL) {
-    puts("Address to matrix is NULL");
-    return;
+    printf("%s: Address to matrix is NULL\n", __func__);
+    return 1;
   }
 
   int total_elem = mat->rows * mat->cols;
@@ -101,13 +102,13 @@ void matrix_scalar_mul(Matrix *mat, double num) {
     mat->data[i] *= num;
   }
 
-  return;
+  return 0;
 }
 
-void matrix_scalar_add(Matrix *mat, double num) {
+int matrix_scalar_add(Matrix *mat, double num) {
   if (mat == NULL) {
-    puts("Address to matrix is NULL");
-    return;
+    printf("%s: Address to matrix is NULL\n", __func__);
+    return 1;
   }
 
   int total_elem = mat->rows * mat->cols;
@@ -115,13 +116,13 @@ void matrix_scalar_add(Matrix *mat, double num) {
     mat->data[i] += num;
   }
 
-  return;
+  return 0;
 }
 
-void random_initialisation(Matrix *mat) {
+int random_initialisation(Matrix *mat) {
   if (mat == NULL) {
-    puts("Address to matrix is NULL");
-    return;
+    printf("%s: Address to matrix is NULL\n", __func__);
+    return 1;
   }
 
   int total_elem = mat->rows * mat->cols;
@@ -129,13 +130,13 @@ void random_initialisation(Matrix *mat) {
     mat->data[i] = ((double)rand() / (RAND_MAX + 1.0)) - 0.5;
   }
 
-  return;
+  return 0;
 }
 
-void matrix_zero_init(Matrix *mat) {
+int matrix_zero_init(Matrix *mat) {
   if (mat == NULL) {
-    puts("Address to matrix is NULL");
-    return;
+    printf("%s: Address to matrix is NULL\n", __func__);
+    return 1;
   }
 
   int total_elem = mat->rows * mat->cols;
@@ -143,24 +144,24 @@ void matrix_zero_init(Matrix *mat) {
     mat->data[i] = 0;
   }
 
-  return;
+  return 0;
 }
 
 // copying mat1 into mat2
-void matrix_copy(Matrix *mat1, Matrix *mat2) {
+int matrix_copy(Matrix *mat1, Matrix *mat2) {
   if (mat1 == NULL) {
-    puts("Address to mat1 is NULL");
-    return;
+    printf("%s: Address to mat1 is NULL\n", __func__);
+    return 1;
   }
   if (mat2 == NULL) {
-    puts("Address to mat2 is NULL");
-    return;
+    printf("%s: Address to mat2 is NULL\n", __func__);
+    return 1;
   }
 
   // checking if both matrix size are same or not
   if ((mat1->cols != mat2->cols) || (mat1->rows != mat2->rows)) {
-    puts("Matrix shape are not equal");
-    return;
+    printf("%s: Matrix shape are not equal\n", __func__);
+    return 2;
   }
 
   mat2->transpose = mat1->transpose;
@@ -170,7 +171,7 @@ void matrix_copy(Matrix *mat1, Matrix *mat2) {
     mat2->data[i] = mat1->data[i];
   }
 
-  return;
+  return 0;
 }
 
 /*
@@ -180,13 +181,13 @@ void matrix_copy(Matrix *mat1, Matrix *mat2) {
 int matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coefficient,
                float mat2_coefficient) {
   if (mat1 == NULL) {
-    puts("Address to mat1 is NULL");
+    printf("%s: Address to mat1 is NULL\n", __func__);
     return 1;
   } else if (mat2 == NULL) {
-    puts("Address to mat2 is NULL");
+    printf("%s: Address to mat2 is NULL\n", __func__);
     return 1;
   } else if (mat3 == NULL) {
-    puts("Address to mat3 is NULL");
+    printf("%s: Address to mat3 is NULL\n", __func__);
     return 1;
   }
 
@@ -201,7 +202,7 @@ int matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coefficient,
 
   if (((cols1 != cols2) || (cols1 != cols3)) ||
       ((rows1 != rows2) || (rows1 != rows3))) {
-    puts("Matrix shape are not equal");
+    printf("%s: Matrix shape are not equal\n", __func__);
     return 2;
   }
 
@@ -226,13 +227,13 @@ int matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coefficient,
 int matrix_row_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
                    float mat2_coeff) {
   if (mat1 == NULL) {
-    puts("Address to mat1 is NULL");
+    printf("%s: Address to mat1 is NULL\n", __func__);
     return 1;
   } else if (mat2 == NULL) {
-    puts("Address to mat2 is NULL");
+    printf("%s: Address to mat2 is NULL\n", __func__);
     return 1;
   } else if (mat3 == NULL) {
-    puts("Address to mat3 is NULL");
+    printf("%s: Address to mat3 is NULL\n", __func__);
     return 1;
   }
 
@@ -246,13 +247,13 @@ int matrix_row_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
   SET_MATRIX_DIMENSIONS(mat3, 3)
 
   if ((cols1 != cols2) || (cols1 != cols3)) {
-    puts("Matrix column value are not equal");
+    printf("%s: Matrix column value are not equal\n", __func__);
     return 2;
   } else if (rows1 != 1) {
-    puts("mat1 rows value should be 1");
+    printf("%s: mat1 rows value should be 1\n", __func__);
     return 2;
   } else if (rows2 != rows3) {
-    puts("mat2 and mat3 rows should be same");
+    printf("%s: mat2 and mat3 rows should be same\n", __func__);
     return 2;
   }
 
@@ -280,13 +281,13 @@ int matrix_row_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
 int matrix_col_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
                    float mat2_coeff) {
   if (mat1 == NULL) {
-    puts("Address to mat1 is NULL");
+    printf("%s: Address to mat1 is NULL\n", __func__);
     return 1;
   } else if (mat2 == NULL) {
-    puts("Address to mat2 is NULL");
+    printf("%s: Address to mat2 is NULL\n", __func__);
     return 1;
   } else if (mat3 == NULL) {
-    puts("Address to mat3 is NULL");
+    printf("%s: Address to mat3 is NULL\n", __func__);
     return 1;
   }
 
@@ -300,13 +301,13 @@ int matrix_col_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
   SET_MATRIX_DIMENSIONS(mat3, 3)
 
   if ((rows1 != rows2) || (rows1 != rows3)) {
-    puts("Matrix rows value are not equal");
+    printf("%s: Matrix rows value are not equal\n", __func__);
     return 2;
   } else if (cols1 != 1) {
-    puts("mat1 cols value should be 1");
+    printf("%s: mat1 cols value should be 1\n", __func__);
     return 2;
   } else if (cols2 != cols3) {
-    puts("mat2 and mat3 cols should be same");
+    printf("%s: mat2 and mat3 cols should be same\n", __func__);
     return 2;
   }
 
@@ -398,16 +399,16 @@ mat1->cols];
 */
 
 // mat1 * mat2 = mat3
-void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
+int matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
   if (mat1 == NULL) {
-    puts("Address to mat1 is NULL");
-    return;
+    printf("%s: Address to mat1 is NULL\n", __func__);
+    return 1;
   } else if (mat2 == NULL) {
-    puts("Address to mat2 is NULL");
-    return;
+    printf("%s: Address to mat2 is NULL\n", __func__);
+    return 1;
   } else if (mat3 == NULL) {
-    puts("Address to mat3 is NULL");
-    return;
+    printf("%s: Address to mat3 is NULL\n", __func__);
+    return 1;
   }
 
   // for mat1
@@ -421,8 +422,8 @@ void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 
   if (((cols1 != cols2) || (cols1 != cols3)) ||
       ((rows1 != rows2) || (rows1 != rows3))) {
-    puts("Matrix shape are not equal");
-    return;
+    printf("%s: Matrix shape are not equal\n", __func__);
+    return 2;
   }
 
   int total_elem = mat1->rows * mat1->cols;
@@ -430,5 +431,5 @@ void matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
     mat3->data[i] = mat1->data[i] * mat2->data[i];
   }
 
-  return;
+  return 0;
 }
