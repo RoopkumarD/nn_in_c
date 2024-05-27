@@ -1,4 +1,8 @@
-#include "mat/mat.h"
+#ifndef UTILS
+#define UTILS 1
 
-int sigmoid(Matrix *mat1, Matrix *mat2);
-int sigmoid_prime(Matrix *mat1, Matrix *mat2);
+unsigned int rand_range(unsigned int min, unsigned max);
+
+void shuffle(unsigned int *arr, int length);
+
+#endif // !UTILS

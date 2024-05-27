@@ -1,58 +1,24 @@
-#include "utils.h"
-#include <math.h>
-#include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 
-// sigmoid(mat1) = mat2
-int sigmoid(Matrix *mat1, Matrix *mat2) {
-  if (mat1 == NULL) {
-    puts("Address mat1 is NULL");
-    return 1;
-  }
-  if (mat2 == NULL) {
-    puts("Address mat2 is NULL");
-    return 1;
-  }
-
-  // checking if both matrix size are same or not
-  if ((mat1->cols != mat2->cols) || (mat1->rows != mat2->rows)) {
-    puts("Matrix shape are not equal");
-    return 1;
-  }
-
-  int total_elem = mat1->rows * mat1->cols;
-  for (int i = 0; i < total_elem; i++) {
-    double denominator = exp(-1 * mat1->data[i]) + 1;
-    mat2->data[i] = 1 / denominator;
-  }
-
-  return 0;
+// gives integer between [min, max] where both are +ve values
+// works only for max <= RAND_MAX
+unsigned int rand_range(unsigned int min, unsigned max) {
+  assert(min <= max);
+  unsigned int range = max + 1 - min;
+  return min + (int)(((double)rand() / RAND_MAX) * range);
 }
 
-// sigmoid_prime(mat1) = mat2
-// mat1 should be sigmoid(mat) = mat1
-// to calculate sigmoid_prime of mat
-int sigmoid_prime(Matrix *mat1, Matrix *mat2) {
-  if (mat1 == NULL) {
-    puts("Address mat1 is NULL");
-    return 1;
+void shuffle(unsigned int *arr, int length) {
+  for (unsigned int i = 0; i < length; i++) {
+    arr[i] = i;
   }
-  if (mat2 == NULL) {
-    puts("Address mat2 is NULL");
-    return 1;
+  for (int i = length - 1; i > -1; i--) {
+    int replacement = rand_range(0, i);
+    unsigned int temp = arr[replacement];
+    arr[replacement] = arr[i];
+    arr[i] = temp;
   }
 
-  // checking if both matrix size are same or not
-  if ((mat1->cols != mat2->cols) || (mat1->rows != mat2->rows)) {
-    puts("Matrix shape are not equal");
-    return 1;
-  }
-
-  int total_elem = mat1->rows * mat1->cols;
-  for (int i = 0; i < total_elem; i++) {
-    double s = mat1->data[i];
-    mat2->data[i] = s * (1 - s);
-  }
-
-  return 0;
+  return;
 }
