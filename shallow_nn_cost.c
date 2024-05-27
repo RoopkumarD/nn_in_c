@@ -13,8 +13,8 @@ double sqr_cost_function(Matrix *activation, Matrix *train_y,
     total_res += curr_elem;
   }
 
-  total_res = total_res * 0.5;
-  total_res = total_res / train_x_length;
+  int denom = 2 * train_x_length;
+  total_res = total_res / denom;
 
   return total_res;
 }

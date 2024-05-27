@@ -5,9 +5,12 @@
 
 // extra 1 value node to multiply AX as ax + b*1
 #define EXTRA_ONE 1
-#define EPOCH 1000
+#define EPOCH 1
 #define LEARN_RATE 5
 
+int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
+                  Matrix *wb[num_layers - 1], int layers[num_layers],
+                  int training_length, int batch_num);
 int gradient_descent(Matrix *X_train, Matrix *Y_train, int num_layers,
                      Matrix *wb[num_layers - 1], int layers[num_layers],
                      int training_length);
