@@ -296,7 +296,7 @@ int matrix_dump_csv(Matrix *mat, char *filename) {
     return 2;
   }
 
-  SET_MATRIX_DIMENSIONS(mat, )
+  SET_MATRIX_DIMENSIONS(mat);
 
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
@@ -325,4 +325,121 @@ int matrix_dump_csv(Matrix *mat, char *filename) {
   fclose(fp);
 
   return 0;
+}
+
+int store_mat_bin(char *filename, Matrix *mat) {
+  int retval = 0;
+
+  // there are two information i have to store, one is
+  // rows, cols and transpose
+  // other is whole data array
+  FILE *fp = fopen(filename, "wb");
+  if (fp == NULL) {
+    fprintf(stderr, "Couldn't Open the file\n");
+    retval = 1;
+    goto cleanup;
+  }
+
+  // structure of binary file
+  // rkad limiteds -> heading which is char *
+  // then rows, cols, transpose at once as all of them are integers
+  // then storing the whole data floats => don't have to worry about
+  // total num as we can get from above rows and cols
+
+  char *HEADER = "RKAD LIMITED - MATRIX";
+  int length = strlen(HEADER);
+
+  if (fwrite(HEADER, sizeof(char), length, fp) != length) {
+    fprintf(stderr, "Failed to write header\n");
+    retval = 2;
+    goto cleanup;
+  }
+
+  // this is because in struct, the mat is address to first field
+  // of the struct. Thus if those field are not allocated in heap
+  // then all of them contain values
+  // so mat -> address of mat->rows, mat+4(as int) -> address of mat->cols
+  // and lastly mat+8(as after cols) -> address of mat->transpose
+  // if not able to understand, then create a simple matrix and
+  // print out all the addresses
+  if (fwrite(mat, sizeof(int), 3, fp) != 3) {
+    fprintf(stderr, "Failed to write rows, cols and transpose\n");
+    retval = 2;
+    goto cleanup;
+  }
+
+  int total_elems = mat->rows * mat->cols;
+
+  if (fwrite(mat->data, sizeof(double), total_elems, fp) != total_elems) {
+    fprintf(stderr, "Failed to write data arr\n");
+    retval = 2;
+    goto cleanup;
+  }
+
+cleanup:
+  fclose(fp);
+
+  return retval;
+}
+
+int read_mat_bin(char *filename, Matrix **mat) {
+  int retval = 0;
+
+  FILE *fp = fopen(filename, "rb");
+  if (fp == NULL) {
+    fprintf(stderr, "Couldn't Open the file\n");
+    retval = 1;
+    goto cleanup;
+  }
+
+  // let's first check the header
+  char HEADER[22];
+  HEADER[21] = '\0';
+  if (fread(&HEADER, sizeof(char), 21, fp) != 21) {
+    fprintf(stderr, "Failed to read header\n");
+    retval = 2;
+    goto cleanup;
+  }
+
+  if (strcmp(HEADER, "RKAD LIMITED - MATRIX") != 0) {
+    fprintf(stderr, "HEADER is not matched\n");
+    retval = 3;
+    goto cleanup;
+  }
+
+  // if header matched then it is our binary file
+  *mat = (Matrix *)malloc(1 * sizeof(Matrix));
+  if (*mat == NULL) {
+    fprintf(stderr, "Couldn't allocated memory for mat\n");
+    retval = 4;
+    goto cleanup;
+  }
+
+  if (fread(*mat, sizeof(int), 3, fp) != 3) {
+    fprintf(stderr, "Failed to read rows, cols and transpose\n");
+    retval = 2;
+    goto cleanup;
+  }
+
+  int total_elems = (*mat)->rows * (*mat)->cols;
+
+  double *data = malloc(total_elems * sizeof(double));
+  if (data == NULL) {
+    fprintf(stderr, "Couldn't allocated memory for data\n");
+    retval = 4;
+    goto cleanup;
+  }
+
+  if (fread(data, sizeof(double), total_elems, fp) != total_elems) {
+    fprintf(stderr, "Failed to read data arr\n");
+    retval = 2;
+    goto cleanup;
+  }
+
+  (*mat)->data = data;
+
+cleanup:
+  fclose(fp);
+
+  return retval;
 }

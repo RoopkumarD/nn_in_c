@@ -59,5 +59,7 @@ typedef unsigned long int uli;
 int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
              int extra_one);
 int matrix_dump_csv(Matrix *mat, char *filename);
+int store_mat_bin(char *filename, Matrix *mat);
+int read_mat_bin(char *filename, Matrix **mat);
 
 #endif /* ifndef MAT_IO */
