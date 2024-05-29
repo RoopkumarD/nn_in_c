@@ -21,20 +21,72 @@ int main(void) {
   srand(42);
 
   int retval = 0;
+  int failure = 0;
+  int compute_layers = num_layers - 1;
 
   Matrix *X_mat = NULL;
   Matrix *Y_mat = NULL;
+
+  Matrix *X_test = NULL;
+  Matrix *Y_test = NULL;
+
   Matrix *wb[num_layers - 1];
-  int compute_layers = num_layers - 1;
+  // so that later on if below reading csv failed
+  // then it can gracefully free pointer which points
+  // to NULL without throwing SIGARBT for freeing
+  // corrupt memory -> because freeing some memory which
+  // isn't there and it is not NULL, thus free throwing err
+  for (int i = 0; i < compute_layers; i++) {
+    wb[i] = NULL;
+  }
 
   puts("Reading CSV");
-  int failure =
-      read_csv("./csvs/mnist_train.csv", "0", &X_mat, &Y_mat, EXTRA_ONE);
+  /*
+  failure = read_csv("./csvs/mnist_train.csv", "0", &X_mat, &Y_mat, EXTRA_ONE);
   if (failure != 0) {
     puts("Failed to read CSV!!!");
     retval = failure;
     goto cleanup;
   }
+
+  failure = store_mat_bin("./csvs/mnist_train_x.bin", X_mat);
+  if (failure != 0) {
+    puts("Failed to store CSV in bin");
+    retval = failure;
+    goto cleanup;
+  }
+
+  failure = store_mat_bin("./csvs/mnist_train_y.bin", Y_mat);
+  if (failure != 0) {
+    puts("Failed to store Y in bin");
+    retval = failure;
+    goto cleanup;
+  }
+  */
+
+  // doing these so to not parse csv again and again
+  failure = read_mat_bin("./csvs/mnist_train_x.bin", &X_mat);
+  if (failure != 0) {
+    puts("Failed to read CSV X in bin");
+    retval = failure;
+    goto cleanup;
+  }
+
+  failure = read_mat_bin("./csvs/mnist_train_y.bin", &Y_mat);
+  if (failure != 0) {
+    puts("Failed to read CSV Y in bin");
+    retval = failure;
+    goto cleanup;
+  }
+
+  /*
+  failure = read_csv("./csvs/mnist_test.csv", "0", &X_test, &Y_test, EXTRA_ONE);
+  if (failure != 0) {
+    puts("Failed to read test CSV!!!");
+    retval = failure;
+    goto cleanup;
+  }
+  */
 
   int training_length = X_mat->rows;
   layers[0] = X_mat->cols - EXTRA_ONE;
@@ -51,8 +103,9 @@ int main(void) {
     wb[i] = weights_bias;
   }
 
-  // now transposing X_mat and Y_mat
+  // now transposing X_mat
   matrix_transpose(X_mat);
+  // matrix_transpose(X_test);
 
   // training the model
   puts("Training the Model");
@@ -63,8 +116,10 @@ int main(void) {
     goto cleanup;
   }
 
+  /*
   // Then feed forward to check the result
-  feed_forward(X_mat, Y_mat, training_length, wb, num_layers);
+  feed_forward(X_test, Y_test, training_length, wb, num_layers);
+  */
 
 cleanup:
   // freeing all the memory asked
@@ -104,7 +159,7 @@ void feed_forward(Matrix *train_x, Matrix *Y_mat, int training_length,
 
   // setting activation to train_x
   // need to worry about transpose
-  SET_MATRIX_DIMENSIONS(train_x, )
+  SET_MATRIX_DIMENSIONS(train_x);
 
   if (activations->cols != cols) {
     puts("Bro send data in (input row) * (obs cols) format");
