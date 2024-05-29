@@ -7,20 +7,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+Explanation of functions at `shallow_nn_train.md`
+*/
+
 int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
                   Matrix *wb[num_layers - 1], int layers[num_layers],
-                  int training_length, int batch_num) {
-  assert(batch_num > 1);
+                  int training_length, int batch_length) {
+  assert(batch_length > 1 && batch_length <= training_length);
   int retval = 0;
   unsigned int arr[training_length];
   Matrix *activations[num_layers];
-  // if there are remainder of training_length / batch_num
-  // then it is distributed with others leaving the last batch
-  // having batch_length <= batch_length of others
-  // The reason i did this so that, while allocating memory
-  // i can safely allocate to max of batch length
-  int batch_length = ceil((double)training_length / batch_num);
-  int temp_bl = batch_length;
+  // here, i am getting total batches number as training_length / batch_length
+  // + 1 -> as last batch will contain remainder of training cases which in
+  // total is not equal to training_length.
+  int batch_num = ceil((double)training_length / batch_length);
+  int remainder_batch_len = training_length % batch_length;
+  int temp_batch_length = batch_length;
   int compute_layers = num_layers - 1;
 
   Matrix *y_cost = Matrix_create(1, batch_length);
@@ -30,22 +33,13 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
     goto cleanup;
   }
 
-  Matrix *acti =
-      Matrix_create(layers[num_layers - 1] + EXTRA_ONE, batch_length);
-  if (acti == NULL) {
-    puts("Failed to create activation matrix");
-    retval = 1;
-    goto cleanup;
-  }
-  activations[num_layers - 1] = acti;
-  for (int i = 0; i < compute_layers; i++) {
-    Matrix *acti = Matrix_create(layers[i] + EXTRA_ONE, batch_length);
-    if (acti == NULL) {
+  for (int i = 0; i < num_layers; i++) {
+    activations[i] = Matrix_create(layers[i] + EXTRA_ONE, batch_length);
+    if (activations[i] == NULL) {
       puts("Failed to create activation matrix");
       retval = 1;
       goto cleanup;
     }
-    activations[i] = acti;
   }
 
   // zs for temp storage while matrix multiplication
@@ -73,11 +67,32 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
     retval = 1;
     goto cleanup;
   }
-  // for that bias term we add extra row and col
-  Matrix *delta_wb =
-      Matrix_create(highest_node_num + EXTRA_ONE, highest_node_num + EXTRA_ONE);
+  int max_wb_rows = 0, max_wb_cols = 0;
+  for (int z = 0; z < compute_layers; z++) {
+    if (wb[z]->rows > max_wb_rows) {
+      max_wb_rows = wb[z]->rows;
+    }
+    if (wb[z]->cols > max_wb_cols) {
+      max_wb_cols = wb[z]->cols;
+    }
+  }
+  Matrix *delta_wb = Matrix_create(max_wb_rows, max_wb_cols);
   if (delta_wb == NULL) {
     puts("Failed to create delta_weights matrix");
+    retval = 1;
+    goto cleanup;
+  }
+
+  // checking for if any matrix defined above is
+  // NULL or not as this way, i don't have to check in any
+  // below matrix function. This makes sense as below i am
+  // not assigning the result to anything just touching
+  // data field of Matrix, just there can't be NULL in future
+  // for above
+  // Since most of above are checked if they are NULL or not
+  // let's check for X_mat
+  if (X_train == NULL) {
+    fprintf(stderr, "%s: X_train is NULL\n", __func__);
     retval = 1;
     goto cleanup;
   }
@@ -96,10 +111,12 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
 
       // case where last batch contains total obs <= batch_length
       // as used ceil above
-      if ((b == batch_num - 1) && (training_length % batch_num != 0)) {
-        batch_length = training_length - start_posn;
+      if ((b == batch_num - 1) && (remainder_batch_len != 0)) {
+        batch_length = remainder_batch_len;
         y_cost->cols = batch_length;
-        activations[0]->cols = batch_length;
+        for (int ki = 0; ki < num_layers; ki++) {
+          activations[ki]->cols = batch_length;
+        }
         zs->cols = batch_length;
         delta->cols = batch_length;
         delta_mul->cols = batch_length;
@@ -138,8 +155,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         if (failure != 0) {
           printf("Wasn't able to get sigmoid of zs and activations[%d]\n",
                  j + 1);
-          printf("Location: In sigmoid of training at layer %d, epoch %d\n", j,
-                 i);
+          printf("Location: In sigmoid of training at layer %d, epoch %d\n",
+                 j + 1, i);
           retval = 2;
           goto cleanup;
         }
@@ -279,10 +296,12 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
       }
 
       // resetting
-      if ((b == batch_num - 1) && (training_length % batch_num != 0)) {
-        batch_length = temp_bl;
+      if ((b == batch_num - 1) && (remainder_batch_len != 0)) {
+        batch_length = temp_batch_length;
         y_cost->cols = batch_length;
-        activations[0]->cols = batch_length;
+        for (int ki = 0; ki < num_layers; ki++) {
+          activations[ki]->cols = batch_length;
+        }
         zs->cols = batch_length;
         delta->cols = batch_length;
         delta_mul->cols = batch_length;
@@ -357,8 +376,16 @@ int gradient_descent(Matrix *X_train, Matrix *Y_train, int num_layers,
     retval = 1;
     goto cleanup;
   }
-  // for that bias term we add extra row and col
-  Matrix *delta_wb = Matrix_create(highest_node_num + 1, highest_node_num + 1);
+  int max_wb_rows = 0, max_wb_cols = 0;
+  for (int z = 0; z < compute_layers; z++) {
+    if (wb[z]->rows > max_wb_rows) {
+      max_wb_rows = wb[z]->rows;
+    }
+    if (wb[z]->cols > max_wb_cols) {
+      max_wb_cols = wb[z]->cols;
+    }
+  }
+  Matrix *delta_wb = Matrix_create(max_wb_rows, max_wb_cols);
   if (delta_wb == NULL) {
     puts("Failed to create delta_weights matrix");
     retval = 1;
