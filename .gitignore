@@ -1,3 +1,7 @@
 *.out
 testing_stuff.c
 *.csv
+*.bin
+
+# ignoring core dumped files
+core*
