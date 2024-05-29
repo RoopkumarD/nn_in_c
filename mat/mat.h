@@ -12,13 +12,28 @@ typedef struct {
 
 #define matrix_transpose(mat) (mat->transpose = (mat->transpose == 0) ? 1 : 0);
 
-// here to set rows -> send SET_MATRIX_DIMENSIONS(mat, )
-// thus it will concaenate rows + nothing = rows
-// if send SET_MATRIX_DIMENSIONS(mat, "")
-// then it will concaenate rows + "" = rows""
-// if send SET_MATRIX_DIMENSIONS(mat, "1")
-// then it will concaenate rows + "1" = rows"1"
-#define SET_MATRIX_DIMENSIONS(mat, num)                                        \
+/*
+Defining separate even though second one works with empty arguement because
+having empty arguement is not a valid code. Still it works for my case, still
+for the sake of not having problem later on, i will define both separately.
+*/
+#define SET_MATRIX_DIMENSIONS(mat)                                             \
+  int rows, cols;                                                              \
+  int mi, nj;                                                                  \
+  int m = mat->transpose;                                                      \
+  if (m == 0) {                                                                \
+    rows = mat->rows;                                                          \
+    cols = mat->cols;                                                          \
+    mi = cols;                                                                 \
+    nj = 1;                                                                    \
+  } else if (m == 1) {                                                         \
+    rows = mat->cols;                                                          \
+    cols = mat->rows;                                                          \
+    mi = 1;                                                                    \
+    nj = rows;                                                                 \
+  }
+
+#define SET_MATRIX_DIMENSIONS_WITH_NUM(mat, num)                               \
   int rows##num, cols##num;                                                    \
   int mi##num, nj##num;                                                        \
   int m##num = mat->transpose;                                                 \
