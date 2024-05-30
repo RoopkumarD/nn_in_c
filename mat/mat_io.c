@@ -1,4 +1,5 @@
 #include "mat_io.h"
+#include "../err_helper.h"
 #include "mat.h"
 #include <float.h>
 #include <limits.h>
@@ -34,8 +35,9 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
 
   FILE *fp = fopen(filepath, "r");
   if (fp == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "%s: can't open %s\n", "CSV_READER", filepath);
-    return -2;
+    return 2;
   }
 
   char sml_buffer[SMALL_BUFFER_SIZE];
@@ -78,8 +80,9 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
     if (sml_buffer[bytes_read - 1] != ',') {
       file_idx += start;
       if (fseek(fp, file_idx, SEEK_SET)) {
+        LINE_FILE_PRINT(1);
         fprintf(stderr, "Can't Seek at %zu from start\n", file_idx);
-        retval = -7;
+        retval = 7;
         goto cleanup;
       }
     } else {
@@ -87,22 +90,25 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
     }
   }
   if (ferror(fp)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Error reading the file\n");
-    retval = -8;
+    retval = 8;
     goto cleanup;
   }
   if (target_col == -1) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Target Name not present in Header\n");
-    retval = -9;
+    retval = 9;
     goto cleanup;
   }
   // to move to next char after '\n'
   file_idx++;
 
   if (fseek(fp, file_idx, SEEK_SET)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Can't Seek at %zu from start\n", file_idx);
     fclose(fp);
-    return -7;
+    return 7;
   }
 
   int check = 0;
@@ -150,20 +156,34 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
     check = buffer[bytes_read - 1];
   }
   if (ferror(fp)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Error reading the file\n");
-    retval = -8;
+    retval = 8;
     goto cleanup;
   }
   row += (check != '\n');
 
   if (fseek(fp, file_idx, SEEK_SET)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Can't Seek at %zu from start\n", file_idx);
     fclose(fp);
-    return -7;
+    return 7;
   }
 
   *csv_mat = Matrix_create(row, col - 1 + extra_one);
+  if (*csv_mat == NULL) {
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Couldn't allocate memory for csv_mat\n");
+    retval = 2;
+    goto cleanup;
+  }
   *y = Matrix_create(1, row);
+  if (*y == NULL) {
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Couldn't allocate memory for y\n");
+    retval = 2;
+    goto cleanup;
+  }
   int read_columns = 0;
   int csv_indx = -1;
   int y_indx = -1;
@@ -214,8 +234,9 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
 
         if (buffer[i] == '\n') {
           if (read_columns != col) {
+            LINE_FILE_PRINT(1);
             fprintf(stderr, "Incorrect file format\n");
-            retval = -3;
+            retval = 3;
             goto cleanup;
           }
           // adding that extra one
@@ -232,8 +253,9 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
       if ((buffer[bytes_read - 1] != '\n') || (buffer[bytes_read - 1] != ',')) {
         file_idx += char_start;
         if (fseek(fp, file_idx, SEEK_SET)) {
+          LINE_FILE_PRINT(1);
           fprintf(stderr, "Can't Seek at %zu from start\n", file_idx);
-          retval = -7;
+          retval = 7;
           goto cleanup;
         }
       } else {
@@ -264,9 +286,9 @@ int read_csv(char *filepath, char *target_name, Matrix **csv_mat, Matrix **y,
       read_columns++;
 
       if (read_columns != col) {
-        fprintf(stderr, "Inside Ending with non \\n\n");
+        LINE_FILE_PRINT(1);
         fprintf(stderr, "Incorrect file format\n");
-        retval = -4;
+        retval = 4;
         goto cleanup;
       }
 
@@ -286,12 +308,14 @@ cleanup:
 
 int matrix_dump_csv(Matrix *mat, char *filename) {
   if (mat == NULL) {
-    puts("Mat address is NULL");
+    LINE_FILE_PRINT(1);
+    fprintf(stderr, "Mat address is NULL\n");
     return 1;
   }
 
   FILE *fp = fopen(filename, "w");
   if (fp == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "Can't open %s\n", filename);
     return 2;
   }
@@ -317,6 +341,7 @@ int matrix_dump_csv(Matrix *mat, char *filename) {
   }
 
   if (ferror(fp)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Err writing file: %s", filename);
     fclose(fp);
     return 3;
@@ -335,6 +360,7 @@ int store_mat_bin(char *filename, Matrix *mat) {
   // other is whole data array
   FILE *fp = fopen(filename, "wb");
   if (fp == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "Couldn't Open the file\n");
     retval = 1;
     goto cleanup;
@@ -350,6 +376,7 @@ int store_mat_bin(char *filename, Matrix *mat) {
   int length = strlen(HEADER);
 
   if (fwrite(HEADER, sizeof(char), length, fp) != length) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Failed to write header\n");
     retval = 2;
     goto cleanup;
@@ -363,6 +390,7 @@ int store_mat_bin(char *filename, Matrix *mat) {
   // if not able to understand, then create a simple matrix and
   // print out all the addresses
   if (fwrite(mat, sizeof(int), 3, fp) != 3) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Failed to write rows, cols and transpose\n");
     retval = 2;
     goto cleanup;
@@ -371,6 +399,7 @@ int store_mat_bin(char *filename, Matrix *mat) {
   int total_elems = mat->rows * mat->cols;
 
   if (fwrite(mat->data, sizeof(double), total_elems, fp) != total_elems) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Failed to write data arr\n");
     retval = 2;
     goto cleanup;
@@ -387,6 +416,7 @@ int read_mat_bin(char *filename, Matrix **mat) {
 
   FILE *fp = fopen(filename, "rb");
   if (fp == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "Couldn't Open the file\n");
     retval = 1;
     goto cleanup;
@@ -396,12 +426,14 @@ int read_mat_bin(char *filename, Matrix **mat) {
   char HEADER[22];
   HEADER[21] = '\0';
   if (fread(&HEADER, sizeof(char), 21, fp) != 21) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Failed to read header\n");
     retval = 2;
     goto cleanup;
   }
 
   if (strcmp(HEADER, "RKAD LIMITED - MATRIX") != 0) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "HEADER is not matched\n");
     retval = 3;
     goto cleanup;
@@ -410,12 +442,14 @@ int read_mat_bin(char *filename, Matrix **mat) {
   // if header matched then it is our binary file
   *mat = (Matrix *)malloc(1 * sizeof(Matrix));
   if (*mat == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "Couldn't allocated memory for mat\n");
     retval = 4;
     goto cleanup;
   }
 
   if (fread(*mat, sizeof(int), 3, fp) != 3) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Failed to read rows, cols and transpose\n");
     retval = 2;
     goto cleanup;
@@ -425,12 +459,14 @@ int read_mat_bin(char *filename, Matrix **mat) {
 
   double *data = malloc(total_elems * sizeof(double));
   if (data == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "Couldn't allocated memory for data\n");
     retval = 4;
     goto cleanup;
   }
 
   if (fread(data, sizeof(double), total_elems, fp) != total_elems) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "Failed to read data arr\n");
     retval = 2;
     goto cleanup;

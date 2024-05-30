@@ -35,6 +35,7 @@
     int pps = ((char_start - 10) < 0) ? 0 : (char_start - 10);                 \
     int ppe = ((i + 10) > (bytes_read)) ? (bytes_read) : (i + 10);             \
     buffer[i] = temp;                                                          \
+    LINE_FILE_PRINT(4);                                                        \
     for (int m = pps; m < ppe; m++) {                                          \
       if ((m >= char_start) && (m < i)) {                                      \
         fprintf(stderr, "\033[1;33m%c\033[0m", buffer[m]);                     \

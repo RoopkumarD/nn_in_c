@@ -1,4 +1,5 @@
 #include "mat.h"
+#include "../err_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +18,7 @@ DO ALWAYS CHECK IF MATRIX DEFINED IS NULL OR NOT, OTHERWISE SEG FAULT.
 Matrix *Matrix_create(int rows, int cols) {
   Matrix *mat = (Matrix *)malloc(sizeof(Matrix));
   if (mat == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "%s: Memory allocation for matrix failed\n", __func__);
     return NULL;
   }
@@ -26,6 +28,7 @@ Matrix *Matrix_create(int rows, int cols) {
   mat->transpose = 0;
   mat->data = (double *)malloc((rows * cols) * sizeof(double));
   if (mat->data == NULL) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "%s: Memory allocation failed for mat->data\n", __func__);
     free(mat);
     return NULL;
@@ -70,10 +73,12 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
   SET_MATRIX_DIMENSIONS_WITH_NUM(res, 3);
 
   if (cols1 != rows2) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: Invalid dimension: cols1 != rows2 -> %d != %d\n",
             __func__, cols1, rows2);
     return 1;
   } else if ((res->rows != rows1) || (res->cols != cols2)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: res dimension should be: %d %d but got %d %d\n",
             __func__, rows1, cols2, res->rows, res->cols);
     return 1;
@@ -133,6 +138,7 @@ int matrix_zero_init(Matrix *mat) {
 int matrix_copy(Matrix *mat1, Matrix *mat2) {
   // checking if both matrix size are same or not
   if ((mat1->cols != mat2->cols) || (mat1->rows != mat2->rows)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: mat1 cols: %d, rows: %d\n", __func__, mat1->cols,
             mat1->rows);
     fprintf(stderr, "%s: mat2 cols: %d, rows: %d\n", __func__, mat2->cols,
@@ -168,6 +174,7 @@ int matrix_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coefficient,
 
   if (((cols1 != cols2) || (cols1 != cols3)) ||
       ((rows1 != rows2) || (rows1 != rows3))) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "%s: mat1 cols: %d, rows: %d\n", __func__, cols1, rows1);
     fprintf(stderr, "%s: mat2 cols: %d, rows: %d\n", __func__, cols2, rows2);
     fprintf(stderr, "%s: mat3 cols: %d, rows: %d\n", __func__, cols3, rows3);
@@ -205,14 +212,17 @@ int matrix_row_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
   SET_MATRIX_DIMENSIONS_WITH_NUM(mat3, 3);
 
   if ((cols1 != cols2) || (cols1 != cols3)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: cols1: %d, cols2: %d, cols3: %d\n", __func__, cols1,
             cols2, cols3);
     fprintf(stderr, "%s: Matrix column value are not equal\n", __func__);
     return 2;
   } else if (rows1 != 1) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: mat1 rows value should be 1\n", __func__);
     return 2;
   } else if (rows2 != rows3) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: row2: %d, row3: %d\n", __func__, rows2, rows3);
     fprintf(stderr, "%s: mat2 and mat3 rows should be same\n", __func__);
     return 2;
@@ -251,14 +261,17 @@ int matrix_col_add(Matrix *mat1, Matrix *mat2, Matrix *mat3, float mat1_coeff,
   SET_MATRIX_DIMENSIONS_WITH_NUM(mat3, 3);
 
   if ((rows1 != rows2) || (rows1 != rows3)) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: rows1: %d, rows2: %d, rows3: %d\n", __func__, rows1,
             rows2, rows3);
     fprintf(stderr, "%s: Matrix rows value are not equal\n", __func__);
     return 2;
   } else if (cols1 != 1) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: mat1 cols value should be 1\n", __func__);
     return 2;
   } else if (cols2 != cols3) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: cols2: %d, cols3: %d\n", __func__, cols2, cols3);
     fprintf(stderr, "%s: mat2 and mat3 cols should be same\n", __func__);
     return 2;
@@ -295,6 +308,7 @@ int matrix_multiply(Matrix *mat1, Matrix *mat2, Matrix *mat3) {
 
   if (((cols1 != cols2) || (cols1 != cols3)) ||
       ((rows1 != rows2) || (rows1 != rows3))) {
+    LINE_FILE_PRINT(2);
     fprintf(stderr, "%s: mat1 cols: %d, rows: %d\n", __func__, cols1, rows1);
     fprintf(stderr, "%s: mat2 cols: %d, rows: %d\n", __func__, cols2, rows2);
     fprintf(stderr, "%s: mat3 cols: %d, rows: %d\n", __func__, cols3, rows3);

@@ -1,5 +1,6 @@
 #include "shallow_nn_train.h"
 #include "activations.h"
+#include "err_helper.h"
 #include "shallow_nn_cost.h"
 #include "utils.h"
 #include <assert.h>
@@ -28,7 +29,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
 
   Matrix *y_cost = Matrix_create(1, batch_length);
   if (y_cost == NULL) {
-    puts("Failed to create y_cost matrix");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create y_cost matrix\n");
     retval = 1;
     goto cleanup;
   }
@@ -36,7 +38,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
   for (int i = 0; i < num_layers; i++) {
     activations[i] = Matrix_create(layers[i] + EXTRA_ONE, batch_length);
     if (activations[i] == NULL) {
-      puts("Failed to create activation matrix");
+      LINE_FILE_PRINT(2);
+      fprintf(stderr, "Failed to create activation matrix\n");
       retval = 1;
       goto cleanup;
     }
@@ -51,19 +54,22 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
   }
   Matrix *zs = Matrix_create(highest_node_num, batch_length);
   if (zs == NULL) {
-    puts("Failed to create zs matrix");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create zs matrix\n");
     retval = 1;
     goto cleanup;
   }
   Matrix *delta = Matrix_create(highest_node_num, batch_length);
   if (delta == NULL) {
-    puts("Failed to create delta matrix");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create delta matrix\n");
     retval = 1;
     goto cleanup;
   }
   Matrix *delta_mul = Matrix_create(highest_node_num, batch_length);
   if (delta_mul == NULL) {
-    puts("Failed to create delta_mul matrix");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create delta_mul matrix\n");
     retval = 1;
     goto cleanup;
   }
@@ -78,7 +84,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
   }
   Matrix *delta_wb = Matrix_create(max_wb_rows, max_wb_cols);
   if (delta_wb == NULL) {
-    puts("Failed to create delta_weights matrix");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create delta_weights matrix\n");
     retval = 1;
     goto cleanup;
   }
@@ -92,6 +99,7 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
   // Since most of above are checked if they are NULL or not
   // let's check for X_mat
   if (X_train == NULL) {
+    LINE_FILE_PRINT(1);
     fprintf(stderr, "%s: X_train is NULL\n", __func__);
     retval = 1;
     goto cleanup;
@@ -142,9 +150,11 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         zs->rows = layers[j + 1];
         int failure = matrix_mul(wb[j], activations[j], zs);
         if (failure != 0) {
-          printf("Wasn't able to matrix_mul wb[%d] and activations[%d]\n", j,
-                 j);
-          puts("Location: In feedforward of training");
+          LINE_FILE_PRINT(2);
+          fprintf(stderr,
+                  "Wasn't able to matrix_mul wb[%d] and activations[%d]\n", j,
+                  j);
+          fprintf(stderr, "Training at layer %d, epoch %d\n", j + 1, i);
           retval = 2;
           goto cleanup;
         }
@@ -153,10 +163,11 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         // z = sigmoid(z)
         failure = sigmoid(zs, activations[j + 1]);
         if (failure != 0) {
-          printf("Wasn't able to get sigmoid of zs and activations[%d]\n",
-                 j + 1);
-          printf("Location: In sigmoid of training at layer %d, epoch %d\n",
-                 j + 1, i);
+          LINE_FILE_PRINT(2);
+          fprintf(stderr,
+                  "Wasn't able to get sigmoid of zs and activations[%d]\n",
+                  j + 1);
+          fprintf(stderr, "Training at layer %d, epoch %d\n", j + 1, i);
           retval = 2;
           goto cleanup;
         }
@@ -185,8 +196,10 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
       int failure =
           matrix_add(activations[num_layers - 1], y_cost, delta, 1, -1);
       if (failure != 0) {
-        printf("Failed to add activations[%d] and Y_mat\n", num_layers - 1);
-        puts("Location: Training -> last layer delta");
+        LINE_FILE_PRINT(2);
+        fprintf(stderr, "Failed to add activations[%d] and Y_mat\n",
+                num_layers - 1);
+        fprintf(stderr, "Training -> last layer delta\n");
         retval = 3;
         goto cleanup;
       }
@@ -194,8 +207,9 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
       sigmoid_prime(activations[num_layers - 1], zs);
       failure = matrix_multiply(delta, zs, delta);
       if (failure != 0) {
-        printf("Failed to matrix_multiply delta and zs\n");
-        puts("Location: Training -> last layer delta");
+        LINE_FILE_PRINT(2);
+        fprintf(stderr, "Failed to matrix_multiply delta and zs\n");
+        fprintf(stderr, "Training -> last layer delta\n");
         retval = 3;
         goto cleanup;
       }
@@ -208,9 +222,10 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
       delta_wb->cols = wb[compute_layers - 1]->cols;
       failure = matrix_mul(delta, activations[num_layers - 2], delta_wb);
       if (failure != 0) {
-        printf("Wasn't able to mat_mul delta and activations[%d]\n",
-               num_layers - 2);
-        puts("Location: In last layer delta_wb of training");
+        LINE_FILE_PRINT(2);
+        fprintf(stderr, "Wasn't able to mat_mul delta and activations[%d]\n",
+                num_layers - 2);
+        fprintf(stderr, "Training -> last layer delta_wb\n");
         retval = 3;
         goto cleanup;
       }
@@ -231,10 +246,11 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         delta_mul->rows = wb[compute_layers - m + 1]->cols;
         int failure = matrix_mul(wb[compute_layers - m + 1], delta, delta_mul);
         if (failure != 0) {
-          printf("Wasn't able to mat_mul wb[%d] and delta\n",
-                 compute_layers - m + 1);
-          printf("Location: In delta of layer %d of training\n",
-                 compute_layers - m);
+          LINE_FILE_PRINT(2);
+          fprintf(stderr, "Wasn't able to mat_mul wb[%d] and delta\n",
+                  compute_layers - m + 1);
+          fprintf(stderr, "Training -> delta of layer %d\n",
+                  compute_layers - m);
           retval = 3;
           goto cleanup;
         }
@@ -247,8 +263,10 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         zs->rows = activations[num_layers - m]->rows;
         failure = sigmoid_prime(activations[num_layers - m], zs);
         if (failure != 0) {
-          puts("Wasn't able to get sigmoid prime");
-          puts("Location: In sigmoid_prime of delta loop");
+          LINE_FILE_PRINT(2);
+          fprintf(stderr, "Wasn't able to get sigmoid prime\n");
+          fprintf(stderr, "Training -> delta of layer %d\n",
+                  compute_layers - m);
           retval = 2;
           goto cleanup;
         }
@@ -256,8 +274,10 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
 
         failure = matrix_multiply(delta_mul, zs, delta_mul);
         if (failure != 0) {
-          puts("Wasn't able to matrix_multiply delta_mul and zs");
-          puts("Location: At matrix_multiply of delta loop");
+          LINE_FILE_PRINT(2);
+          fprintf(stderr, "Wasn't able to matrix_multiply delta_mul and zs\n");
+          fprintf(stderr, "Training -> delta of layer %d\n",
+                  compute_layers - m);
           retval = 2;
           goto cleanup;
         }
@@ -270,9 +290,11 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         failure =
             matrix_mul(delta_mul, activations[num_layers - m - 1], delta_wb);
         if (failure != 0) {
-          printf("Wasn't able to mat_mul delta and activations[%d]\n",
-                 num_layers - m - 1);
-          puts("Location: In layer loop delta_wb of training");
+          LINE_FILE_PRINT(2);
+          fprintf(stderr, "Wasn't able to mat_mul delta and activations[%d]\n",
+                  num_layers - m - 1);
+          fprintf(stderr, "Training -> delta of layer %d\n",
+                  compute_layers - m);
           retval = 3;
           goto cleanup;
         }
@@ -288,8 +310,10 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         delta->rows = delta_mul->rows;
         failure = matrix_copy(delta_mul, delta);
         if (failure != 0) {
-          puts("Couldn't copy delta_mul to delta");
-          puts("Location: At end of delta loop");
+          LINE_FILE_PRINT(2);
+          fprintf(stderr, "Couldn't copy delta_mul to delta\n");
+          fprintf(stderr, "Training -> delta of layer %d\n",
+                  compute_layers - m);
           retval = 10;
           goto cleanup;
         }

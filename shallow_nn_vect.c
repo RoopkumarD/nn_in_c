@@ -1,4 +1,5 @@
 #include "activations.h"
+#include "err_helper.h"
 #include "mat/mat.h"
 #include "mat/mat_io.h"
 #include "shallow_nn_cost.h"
@@ -44,21 +45,24 @@ int main(void) {
   /*
   failure = read_csv("./csvs/mnist_train.csv", "0", &X_mat, &Y_mat, EXTRA_ONE);
   if (failure != 0) {
-    puts("Failed to read CSV!!!");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to read CSV!!!\n");
     retval = failure;
     goto cleanup;
   }
 
   failure = store_mat_bin("./csvs/mnist_train_x.bin", X_mat);
   if (failure != 0) {
-    puts("Failed to store CSV in bin");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to store CSV in bin\n");
     retval = failure;
     goto cleanup;
   }
 
   failure = store_mat_bin("./csvs/mnist_train_y.bin", Y_mat);
   if (failure != 0) {
-    puts("Failed to store Y in bin");
+  LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to store Y in bin\n");
     retval = failure;
     goto cleanup;
   }
@@ -67,14 +71,16 @@ int main(void) {
   // doing these so to not parse csv again and again
   failure = read_mat_bin("./csvs/mnist_train_x.bin", &X_mat);
   if (failure != 0) {
-    puts("Failed to read CSV X in bin");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to read CSV X in bin\n");
     retval = failure;
     goto cleanup;
   }
 
   failure = read_mat_bin("./csvs/mnist_train_y.bin", &Y_mat);
   if (failure != 0) {
-    puts("Failed to read CSV Y in bin");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to read CSV Y in bin\n");
     retval = failure;
     goto cleanup;
   }
@@ -82,7 +88,8 @@ int main(void) {
   /*
   failure = read_csv("./csvs/mnist_test.csv", "0", &X_test, &Y_test, EXTRA_ONE);
   if (failure != 0) {
-    puts("Failed to read test CSV!!!");
+    LINE_FILE_PRINT();
+    fprint(stderr, "Failed to read test CSV!!!\n");
     retval = failure;
     goto cleanup;
   }
@@ -95,7 +102,8 @@ int main(void) {
     // cols +1 as storing bias there
     Matrix *weights_bias = Matrix_create(layers[i + 1], layers[i] + EXTRA_ONE);
     if (weights_bias == NULL) {
-      puts("Failed to create weight matrix");
+      LINE_FILE_PRINT(2);
+      fprintf(stderr, "Failed to create weight matrix\n");
       retval = 1;
       goto cleanup;
     }
@@ -112,7 +120,8 @@ int main(void) {
   failure = stochastic_gd(X_mat, Y_mat, num_layers, wb, layers, training_length,
                           10000);
   if (failure != 0) {
-    puts("Failed to Train!!!");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to Train!!!\n");
     goto cleanup;
   }
 
@@ -135,7 +144,8 @@ cleanup:
 void feed_forward(Matrix *train_x, Matrix *Y_mat, int training_length,
                   Matrix *wb[], int num_layer) {
   if (train_x == NULL) {
-    puts("train_x is NULL");
+    LINE_FILE_PRINT(1);
+    fprintf(stderr, "train_x == NULL\n");
     goto cleanup;
   }
 
@@ -147,13 +157,15 @@ void feed_forward(Matrix *train_x, Matrix *Y_mat, int training_length,
   }
   Matrix *zs = Matrix_create(highest_node_num, training_length);
   if (zs == NULL) {
-    puts("Failed to create zs matrix for feedforward");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create zs matrix for feedforward\n");
     goto cleanup;
   }
   Matrix *activations =
       Matrix_create(highest_node_num + EXTRA_ONE, training_length);
   if (activations == NULL) {
-    puts("Failed to create activations matrix for feedforward");
+    LINE_FILE_PRINT(2);
+    fprintf(stderr, "Failed to create activations matrix for feedforward\n");
     goto cleanup;
   }
 
@@ -162,7 +174,8 @@ void feed_forward(Matrix *train_x, Matrix *Y_mat, int training_length,
   SET_MATRIX_DIMENSIONS(train_x);
 
   if (activations->cols != cols) {
-    puts("Bro send data in (input row) * (obs cols) format");
+    LINE_FILE_PRINT(1);
+    fprintf(stderr, "Bro send data in (input row) * (obs cols) format\n");
     goto cleanup;
   }
 
@@ -188,16 +201,16 @@ void feed_forward(Matrix *train_x, Matrix *Y_mat, int training_length,
     zs->rows = layers[j + 1];
     int failure = matrix_mul(wb[j], activations, zs);
     if (failure == 1) {
-      printf("Wasn't able to mat_mul wb[%d] and activations\n", j);
-      printf("Location: Feedforward function loop\n");
+      LINE_FILE_PRINT(2);
+      fprintf(stderr, "Wasn't able to mat_mul wb[%d] and activations\n", j);
       goto cleanup;
     }
     activations->rows = zs->rows;
     // z = sigmoid(z)
     failure = sigmoid(zs, activations);
     if (failure == 1) {
-      puts("Wasn't able to get sigmoid");
-      puts("Location: In sigmoid of feedforward function loop");
+      LINE_FILE_PRINT(2);
+      fprintf(stderr, "Wasn't able to get sigmoid\n");
       goto cleanup;
     }
     activations->rows += EXTRA_ONE;
