@@ -1,5 +1,6 @@
 #include "mat.h"
 #include "../err_helper.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,8 +16,17 @@ NULL POINTER AGAIN AS THERE IS NO ASSIGNMENT.
 DO ALWAYS CHECK IF MATRIX DEFINED IS NULL OR NOT, OTHERWISE SEG FAULT.
 */
 
+// copied from glibc/posix/flexmember.h
+#define FLEXALIGNOF(type) (sizeof(type) & ~(sizeof(type) - 1))
+#define FLEXSIZEOF(type, member, n)                                            \
+    ((offsetof(type, member) + FLEXALIGNOF(type) - 1 + (n)) &                  \
+     ~(FLEXALIGNOF(type) - 1))
+
 Matrix *Matrix_create(int rows, int cols) {
-    Matrix *mat = (Matrix *)malloc(sizeof(Matrix));
+    // can't do sizeof(Matrix) + (rows * cols) * sizeof(double)
+    // because for 32 bit system, sizeof will consider extra padding after
+    // transpose, thus wasted bytes as data will start after transpose.
+    Matrix *mat = malloc(FLEXSIZEOF(Matrix, data, sizeof(double[rows * cols])));
     if (mat == NULL) {
         LINE_FILE_PRINT(2);
         fprintf(stderr, "%s: Memory allocation for matrix failed\n", __func__);
@@ -26,14 +36,6 @@ Matrix *Matrix_create(int rows, int cols) {
     mat->rows = rows;
     mat->cols = cols;
     mat->transpose = 0;
-    mat->data = (double *)malloc((rows * cols) * sizeof(double));
-    if (mat->data == NULL) {
-        LINE_FILE_PRINT(2);
-        fprintf(stderr, "%s: Memory allocation failed for mat->data\n",
-                __func__);
-        free(mat);
-        return NULL;
-    }
 
     return mat;
 }
@@ -42,10 +44,7 @@ void matrix_free(Matrix *mat) {
     if (mat == NULL) {
         return;
     }
-
-    free(mat->data);
     free(mat);
-
     return;
 }
 

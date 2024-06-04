@@ -444,7 +444,15 @@ int read_mat_bin(char *filename, Matrix **mat) {
     }
 
     // if header matched then it is our binary file
-    *mat = (Matrix *)malloc(1 * sizeof(Matrix));
+    int temp[3];
+    if (fread(&temp, sizeof(int), 3, fp) != 3) {
+        LINE_FILE_PRINT(1);
+        fprintf(stderr, "Failed to read rows, cols and transpose\n");
+        retval = 2;
+        goto cleanup;
+    }
+
+    *mat = Matrix_create(temp[0], temp[1]);
     if (*mat == NULL) {
         LINE_FILE_PRINT(2);
         fprintf(stderr, "Couldn't allocated memory for mat\n");
@@ -452,31 +460,16 @@ int read_mat_bin(char *filename, Matrix **mat) {
         goto cleanup;
     }
 
-    if (fread(*mat, sizeof(int), 3, fp) != 3) {
-        LINE_FILE_PRINT(1);
-        fprintf(stderr, "Failed to read rows, cols and transpose\n");
-        retval = 2;
-        goto cleanup;
-    }
+    (*mat)->transpose = temp[2];
 
     int total_elems = (*mat)->rows * (*mat)->cols;
 
-    double *data = malloc(total_elems * sizeof(double));
-    if (data == NULL) {
-        LINE_FILE_PRINT(2);
-        fprintf(stderr, "Couldn't allocated memory for data\n");
-        retval = 4;
-        goto cleanup;
-    }
-
-    if (fread(data, sizeof(double), total_elems, fp) != total_elems) {
+    if (fread((*mat)->data, sizeof(double), total_elems, fp) != total_elems) {
         LINE_FILE_PRINT(1);
         fprintf(stderr, "Failed to read data arr\n");
         retval = 2;
         goto cleanup;
     }
-
-    (*mat)->data = data;
 
 cleanup:
     fclose(fp);
