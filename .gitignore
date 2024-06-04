@@ -2,6 +2,7 @@
 testing_stuff.c
 *.csv
 *.bin
+*.gch
 
 # ignoring core dumped files
 core*
