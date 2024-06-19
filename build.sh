@@ -10,7 +10,14 @@ gcc -c shallow_nn_cost.c -o shallow_nn_cost.o -g
 gcc -c shallow_nn_vect.c -o shallow_nn_vect.o -g
 
 # Link all object files into the final executable
-gcc mat.o mat_io.o utils.o activations.o shallow_nn_train.o shallow_nn_cost.o shallow_nn_vect.o -o shallow_nn_vect.out -lm -g
+gcc mat.o \
+    mat_io.o \
+    utils.o \
+    activations.o \
+    shallow_nn_train.o \
+    shallow_nn_cost.o \
+    shallow_nn_vect.o \
+    -o shallow_nn_vect.out -lm -g
 
 # Cleanup
 rm *.o

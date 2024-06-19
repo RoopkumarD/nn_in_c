@@ -1,12 +1,14 @@
 #include "shallow_nn_train.h"
 #include "activations.h"
 #include "err_helper.h"
+#include "mat/mat.h"
 #include "shallow_nn_cost.h"
 #include "utils.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 /*
 Explanation of functions at `shallow_nn_train.md`
@@ -35,7 +37,15 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         goto cleanup;
     }
 
-    for (int i = 0; i < num_layers; i++) {
+    activations[0] = Matrix_create(batch_length, layers[0] + EXTRA_ONE);
+    if (activations[0] == NULL) {
+        LINE_FILE_PRINT(2);
+        fprintf(stderr, "Failed to create activation matrix\n");
+        retval = 1;
+        goto cleanup;
+    }
+    matrix_transpose(activations[0]);
+    for (int i = 1; i < num_layers; i++) {
         activations[i] = Matrix_create(layers[i] + EXTRA_ONE, batch_length);
         if (activations[i] == NULL) {
             LINE_FILE_PRINT(2);
@@ -122,7 +132,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
             if ((b == batch_num - 1) && (remainder_batch_len != 0)) {
                 batch_length = remainder_batch_len;
                 y_cost->cols = batch_length;
-                for (int ki = 0; ki < num_layers; ki++) {
+                activations[0]->rows = batch_length;
+                for (int ki = 1; ki < num_layers; ki++) {
                     activations[ki]->cols = batch_length;
                 }
                 zs->cols = batch_length;
@@ -131,17 +142,53 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
                 end_posn = training_length;
             }
 
-            for (int m = start_posn; m < end_posn; m++) {
-                // since both activations and X are in form such
-                // that obs are in cols and rows are dimensions
-                // activations[0] -> m = 0 and X -> m = 1 as transposed
-                int mcol = m - start_posn;
-                for (int mrow = 0; mrow < layers[0] + EXTRA_ONE; mrow++) {
-                    activations[0]->data[mcol + mrow * batch_length] =
-                        X_train->data[arr[m] + mrow * training_length];
+            // both activations and X_mat are of same order
+            // that is observations are at rows and input
+            // dimensions are at cols
+            size_t input_dim = layers[0] + EXTRA_ONE;
+            short extras = input_dim % 8;
+            size_t dim_end = input_dim - extras;
+
+            for (size_t m = start_posn; m < end_posn; m++) {
+                size_t row_idx = m - start_posn;
+
+                double *src_addr = X_train->data + arr[m] * input_dim;
+                double *dest_addr = activations[0]->data + row_idx * input_dim;
+                size_t elems = dim_end;
+                short leftovers = extras;
+
+                // if input_dim < 8 then goto below loop
+                if (input_dim < 8) {
+                    goto lessthan8;
                 }
+
+                // unrolling the loop
+                while (elems > 0) {
+                    dest_addr[0] = src_addr[0];
+                    dest_addr[1] = src_addr[1];
+                    dest_addr[2] = src_addr[2];
+                    dest_addr[3] = src_addr[3];
+                    dest_addr[4] = src_addr[4];
+                    dest_addr[5] = src_addr[5];
+                    dest_addr[6] = src_addr[6];
+                    dest_addr[7] = src_addr[7];
+
+                    src_addr += 8;
+                    dest_addr += 8;
+                    elems -= 8;
+                }
+                // filling out leftovers
+            lessthan8:
+                while (leftovers > 0) {
+                    dest_addr[0] = src_addr[0];
+
+                    src_addr += 1;
+                    dest_addr += 1;
+                    leftovers -= 1;
+                }
+
                 // and copying Y to y_cost
-                y_cost->data[mcol] = Y_train->data[arr[m]];
+                y_cost->data[row_idx] = Y_train->data[arr[m]];
             }
 
             // after copying, starting training one time for this batch
@@ -334,7 +381,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
             if ((b == batch_num - 1) && (remainder_batch_len != 0)) {
                 batch_length = temp_batch_length;
                 y_cost->cols = batch_length;
-                for (int ki = 0; ki < num_layers; ki++) {
+                activations[0]->rows = batch_length;
+                for (int ki = 1; ki < num_layers; ki++) {
                     activations[ki]->cols = batch_length;
                 }
                 zs->cols = batch_length;
