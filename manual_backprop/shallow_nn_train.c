@@ -114,6 +114,8 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
         retval = 1;
         goto cleanup;
     }
+    clock_t final_avg = 0;
+    size_t count_avg = 0;
 
     // training
     for (int i = 0; i < EPOCH; i++) {
@@ -191,6 +193,7 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
                 y_cost->data[row_idx] = Y_train->data[arr[m]];
             }
 
+            clock_t start = clock();
             // after copying, starting training one time for this batch
             for (int j = 0; j < compute_layers; j++) {
                 // z = np.dot(w, z) + b
@@ -389,12 +392,16 @@ int stochastic_gd(Matrix *X_train, Matrix *Y_train, int num_layers,
                 delta->cols = batch_length;
                 delta_mul->cols = batch_length;
             }
+            clock_t end = clock();
+            final_avg += (end - start);
+            count_avg++;
         }
 
         // after above all batch training printing total_avg_cost_across_batch
         total_avg_cost_across_batch /= batch_num;
         printf("Epoch %d -> Cost %f\n", i, total_avg_cost_across_batch);
     }
+    printf("Training time: %f\n", ((double)final_avg / count_avg));
 
 cleanup:
     matrix_free(y_cost);

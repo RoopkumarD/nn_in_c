@@ -84,13 +84,32 @@ int matrix_mul(Matrix *mat1, Matrix *mat2, Matrix *res) {
         return 1;
     }
 
+    /*
+    for (int i = 0; i < rows1; i++) {
+        // this sections add 1000 ms additional time taken in final_avg in
+        // shallow train
+        for (int ui = 0; ui < cols2; ui++) {
+            res->data[i * mi3 + ui * nj3] = 0;
+        }
+        for (int k = 0; k < cols1; k++) {
+            for (int j = 0; j < cols2; j++) {
+                res->data[i * mi3 + j * nj3] += mat1->data[i * mi1 + k * nj1] *
+                                                mat2->data[k * mi2 + j * nj2];
+            }
+        }
+    }
+    */
+
+    // this thing is faster than above, daam maybe i am doing something wrong
+    // or how come above cache implementation is worse than this
+    // even though setting to zero only contribute minuscle 1000 ms
+    // compared to 400_000 which is above and this below is about 390_000
     for (int i = 0; i < rows1; i++) {
         for (int j = 0; j < cols2; j++) {
             res->data[i * cols2 + j] = 0;
             for (int k = 0; k < cols1; k++) {
                 res->data[i * mi3 + j * nj3] += mat1->data[i * mi1 + k * nj1] *
                                                 mat2->data[k * mi2 + j * nj2];
-                // res->data[i][j] += mat1->data[i][k] * mat2->data[k][j];
             }
         }
     }
