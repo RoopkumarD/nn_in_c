@@ -14,11 +14,6 @@ in the function where calloc has failed
 
 by calling gpl free which frees all the memory allocated
 
-This also imposes another restriction which is to free all
-intermediate/temp memory and not store in this array
-because all the pointer stored in this array will exists till
-end of the process
-
 Usage: glb_init at start of main function of process and then
 register glb_free to atexit function
 which is just something which executes the function registered
@@ -53,7 +48,8 @@ int glb_init() {
 
 void glb_free() {
     for (size_t i = 0; i < _global_ptr_accumulator.used_length; i++) {
-        free_variable(_global_ptr_accumulator.gptracc[i]);
+        free(_global_ptr_accumulator.gptracc[i]);
+        // free_variable(_global_ptr_accumulator.gptracc[i]);
     }
     free(_global_ptr_accumulator.gptracc);
     return;
@@ -78,16 +74,42 @@ int glb_reallocate() {
 /*
 Adding all the pointer whose lifetime is till end of process
 */
-void glb_addptr(void *tens) {
+size_t glb_addptr(void *tens) {
     if (_global_ptr_accumulator.used_length == _global_ptr_accumulator.length) {
         int result = glb_reallocate();
         if (result == -1) {
-            free_variable(tens);
+            // free_variable(tens);
+            free(tens);
             exit(EXIT_FAILURE);
         }
     }
-    _global_ptr_accumulator.gptracc[_global_ptr_accumulator.used_length] = tens;
+    size_t idx = _global_ptr_accumulator.used_length;
+    _global_ptr_accumulator.gptracc[idx] = tens;
     _global_ptr_accumulator.used_length++;
+    return idx;
+}
+
+/*
+ * removes NULL's in the array
+ * so getting free space to add the new pointers
+ * thus lowering the chance of used_length increasing
+ * if there is already some NULL's in the array
+ */
+void glb_null_clean() {
+    void **temp[_global_ptr_accumulator.used_length];
+    size_t num_bytes = sizeof(void *) * _global_ptr_accumulator.used_length;
+    memset(temp, 0, num_bytes);
+
+    size_t temp_idx = 0;
+    for (size_t i = 0; i < _global_ptr_accumulator.used_length; i++) {
+        if (_global_ptr_accumulator.gptracc[i] != NULL) {
+            temp[temp_idx++] = _global_ptr_accumulator.gptracc[i];
+        }
+    }
+
+    memcpy(_global_ptr_accumulator.gptracc, temp, num_bytes);
+    _global_ptr_accumulator.used_length = temp_idx;
+
     return;
 }
 
@@ -165,6 +187,12 @@ tensor *create_tensor(int *ndim_shape, int ndim) {
     tens->strides = ten_stride;
     tens->data = data_storage;
 
+    if (_global_ptr_accumulator.gptracc != NULL) {
+        tens->glb_idxs[0] = glb_addptr(combined_ndims);
+        tens->glb_idxs[1] = glb_addptr(data_storage);
+        tens->glb_idxs[2] = glb_addptr(tens);
+    }
+
     memcpy(ten_ndim_shape, ndim_shape, ndim * sizeof(int));
     // since {depth, row, col} is indexes so stride will be
     // {row * col, col, 1}
@@ -194,6 +222,9 @@ void free_tensor(tensor *tens) {
     // free(tens->shape);
     // free(tens->strides);
     free(tens->data);
+    for (int i = 0; i < 3; i++) {
+        _global_ptr_accumulator.gptracc[tens->glb_idxs[i]] = NULL;
+    }
     free(tens);
     return;
 }
@@ -227,9 +258,10 @@ variable *create_variable(int *ndim_shape, int ndim, bool requires_grad) {
     ret_var->parents[1] = NULL;
     ret_var->operation = NULL;
     ret_var->backprop = NULL;
+    ret_var->glb_idx = -1;
 
     if (_global_ptr_accumulator.gptracc != NULL) {
-        glb_addptr(ret_var);
+        ret_var->glb_idx = glb_addptr(ret_var);
     }
 
     return ret_var;
@@ -248,6 +280,7 @@ void free_variable(variable *var) {
     }
     free_tensor(var->tens);
     free_tensor(var->gradient);
+    _global_ptr_accumulator.gptracc[var->glb_idx] = NULL;
     free(var);
     return;
 }
@@ -1226,6 +1259,97 @@ variable *tensor_sigmoid(variable *tens) {
     res->parents[1] = NULL;
     res->operation = _tensor_sigmoid;
     res->backprop = _tensor_sigmoid_backprop;
+
+    return res;
+}
+
+void _tensor_softmax(variable *parent[2], tensor *res) {
+    tensor *tens = parent[0]->tens;
+    int rows = tens->shape[0];
+    int cols = tens->shape[1];
+    float summed_result[cols];
+    float exponented_matrix[tens->total_size];
+    memset(summed_result, 0, sizeof(float) * cols);
+
+    for (int i = 0; i < res->total_size; i++) {
+        float exponented = exp(tens->data[i]);
+        exponented_matrix[i] = exponented;
+        summed_result[i % cols] += exponented;
+    }
+
+    for (int i = 0; i < res->total_size; i++) {
+        res->data[i] = exponented_matrix[i] / summed_result[i % cols];
+    }
+
+    return;
+}
+
+void _tensor_softmax_backprop(variable *result) {
+    variable *var_tens = result->parents[0];
+    tensor *tens = var_tens->tens;
+    tensor *res = result->tens;
+
+    tensor *grad_tens = var_tens->gradient;
+    tensor *grad_res = result->gradient;
+
+    if (grad_tens == NULL) {
+        return;
+    }
+
+    /*
+     * to derive below, just do normal jacobian matrix product
+     * of vector in and out only.
+     *
+     * soft(x) = y => delta_y * delta_soft(x)
+     *
+     * and then sum up the result for each column as each column
+     * represent delta of x_i
+     */
+
+    /*
+     * Here rather getting gradient explicitly by creating
+     * new tensors for each column in the matrix. i removed
+     * redundant steps and below is the final result of removal
+     *
+     * since any element gradient is
+     * disi(1-si) - si(sum over leaving disi)
+     *
+     * this is what i did below
+     */
+    int rows = tens->shape[0];
+    int cols = tens->shape[1];
+    float summed_result[cols];
+    float multiplied_mat[tens->total_size];
+    memset(summed_result, 0, sizeof(float) * cols);
+
+    for (int i = 0; i < res->total_size; i++) {
+        multiplied_mat[i] = res->data[i] * grad_res->data[i];
+        summed_result[i % cols] += multiplied_mat[i];
+    }
+
+    for (int i = 0; i < res->total_size; i++) {
+        float temp = summed_result[i % cols] - multiplied_mat[i];
+        grad_tens->data[i] =
+            (1 - res->data[i]) * multiplied_mat[i] - res->data[i] * temp;
+    }
+
+    return;
+}
+
+variable *tensor_softmax(variable *tens) {
+    if (tens->tens->ndim != 2) {
+        fprintf(stderr,
+                "%s: invalid dimension: total dimension -> %d but operation "
+                "defined for ndim=2\n",
+                __func__, tens->tens->ndim);
+        exit(EXIT_FAILURE);
+    }
+
+    variable *res = create_variable(tens->tens->shape, tens->tens->ndim, true);
+    res->parents[0] = tens;
+    res->parents[1] = NULL;
+    res->operation = _tensor_softmax;
+    res->backprop = _tensor_softmax_backprop;
 
     return res;
 }

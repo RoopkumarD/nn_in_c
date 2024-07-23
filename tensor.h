@@ -14,6 +14,7 @@ typedef struct {
     int     *shape;
     int     *strides;
     float   *data;
+    size_t  glb_idxs[3];
 } tensor;
 /* clang-format on */
 
@@ -34,7 +35,10 @@ struct _variable {
     operator_backprop       backprop;
 
     // extra debugging stuff
-    char                    *label;
+    // char                    *label;
+
+    // memory stuff
+    size_t                  glb_idx;
 };
 /* clang-format on */
 
